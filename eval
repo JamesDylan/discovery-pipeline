@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Workspace eval. Run from the workspace root: ./eval
+#
+# Free tiers — run these as often as you like:
+#   ./eval                          contracts, paths, output names, drift. ~0.1s, no model at all
+#   ./eval --open                   ditto, then open the report
+#   ./eval doctor                   one-time: find and test the local Ollama model
+#   ./eval legibility               local model executes each stage — is the contract unambiguous?
+#   ./eval legibility --stage 02_explore --keep
+#
+# Costs tokens — run at a checkpoint, not while editing:
+#   ./eval behaviour                Claude runs the stages and grades the output
+#   ./eval behaviour --no-grade     mechanics only: did the stage write what it promised?
+#   ./eval all                      all three tiers
+#   ./eval all --grader local       local grades what it can; judgement criteria left ungraded
+#   ./eval all --grader claude      everything to Claude
+#
+# What is enforced lives in _eval/checks.json. Rubrics in _eval/rubrics/. See _eval/README.md.
+set -euo pipefail
+cd "$(dirname "$0")"
+export PYTHONDONTWRITEBYTECODE=1   # keep __pycache__ out of the workspace
+exec python3 _eval/evaluate.py "$@"

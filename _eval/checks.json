@@ -1,0 +1,113 @@
+{
+  "_comment": "Edit this file to change what the eval enforces. No code changes needed. Severities: fail | warn | info.",
+
+  "required_sections": ["Inputs", "Process", "Outputs", "Human check"],
+
+  "canonical_outputs": {
+    "00_setup":                  ["inventory.md"],
+    "01_frame":                  ["frame.md"],
+    "02_explore":                ["options.md"],
+    "03_converge":               ["direction.md"],
+    "04_make-tangible":          ["artefact-notes.md"],
+    "05_pressure-test":          ["pressure-test.md"],
+    "06_playback":               ["playback.md"],
+    "07_engineering-refinement": ["solution-scope.md"],
+    "08_vision-horizon":         ["vision-horizon.md"],
+    "09_report":                 ["content.yaml", "gaps.md", "vision-report.html"],
+    "10_prototype-handoff":      ["prototype-briefs/<slug>.md", "HANDOFF.md"]
+  },
+
+  "optional_stages": ["09_report", "10_prototype-handoff"],
+
+  "entrypoints": [
+    "CLAUDE.md",
+    "CONTEXT.md",
+    "RUNBOOK.md",
+    "README.md",
+    "_shared/CONTEXT.md",
+    "_shared/operating-principles.md",
+    "_shared/house-view.md",
+    "_template/CLAUDE.md",
+    "_template/CONTEXT.md"
+  ],
+
+  "always_loaded": [
+    "_shared/operating-principles.md",
+    "_shared/house-view.md"
+  ],
+
+  "terminal_folders": ["99-vision-synthesis", "100-report", "101-prototype-handoff"],
+
+  "placeholder_tokens": [
+    "<fill",
+    "<one line>",
+    "<name",
+    "<PROBLEM SPACE NAME>",
+    "<which",
+    "<the specific",
+    "TODO",
+    "TBC"
+  ],
+
+  "empty_promise_heading": "Run-specific notes by stage",
+
+  "external_path_prefixes": ["~", "Tools/", "/", "http"],
+
+  "local": {
+    "_comment": "Ollama. Run `./eval doctor` to detect and fill model/grader_model.",
+    "base_url": "http://localhost:11434",
+    "model": "",
+    "grader_model": "",
+    "num_ctx": 16384,
+    "temperature": 0,
+    "max_turns": 24,
+    "timeout": 300,
+    "prefer": ["qwen2.5:32b", "qwen2.5:14b", "qwen2.5:7b", "qwen2.5", "qwen3", "llama3.1"]
+  },
+
+  "severities": {
+    "walk.entrypoint-missing":        "fail",
+    "walk.route-target-missing":      "fail",
+    "contract.missing-section":       "fail",
+    "contract.input-unresolved":      "fail",
+    "contract.input-stage-missing":   "fail",
+    "contract.upstream-not-run":      "info",
+    "contract.no-output-declared":    "fail",
+    "contract.output-mismatch":       "fail",
+    "contract.table-mismatch":        "fail",
+    "contract.downstream-disagree":   "fail",
+    "contract.always-loaded-missing": "warn",
+    "contract.do-not-load-conflict":  "fail",
+    "contract.external-path":         "info",
+    "run.stage-missing":              "fail",
+    "run.optional-stage-absent":      "info",
+    "run.extra-stage":                "warn",
+    "identity.placeholder":           "fail",
+    "identity.empty-promise":         "fail",
+    "drift.template":                 "warn",
+    "shared.dangling-reference":      "fail",
+    "order.out-of-sequence":          "warn",
+    "behaviour.output-missing":       "fail",
+    "behaviour.output-empty":         "fail",
+    "behaviour.forbidden-read":       "fail",
+    "behaviour.input-not-read":       "warn",
+    "behaviour.rubric":               "fail",
+    "behaviour.error":                "fail",
+    "behaviour.rubric-ungraded":      "info",
+
+    "legibility.output-missing":      "warn",
+    "legibility.output-thin":         "warn",
+    "legibility.forbidden-read":      "warn",
+    "legibility.input-not-read":      "info",
+    "legibility.wrong-path":          "warn",
+    "legibility.stalled":             "warn",
+    "legibility.error":               "info",
+    "legibility.ok":                  "info"
+  },
+
+  "ignore": {
+    "_comment": "Check IDs listed here are recorded but never fail the exit code. Use for known, accepted deviations.",
+    "check_ids": [],
+    "paths": []
+  }
+}
