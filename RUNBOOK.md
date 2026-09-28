@@ -1,472 +1,490 @@
 # Runbook
 
-How to actually run this. Two parts:
+This is the step-by-step guide for running the process. Read `README.md` first. It explains what
+this workspace is and why it exists. This file explains how to use it.
 
-- **Part 0** — the solo test run. Do this first, before anyone else touches the process.
-- **Part 1** — the full workshop process, start to finish.
+> **This is a guide, not a fixed schedule.** The steps below are in the usual order, with rough
+> times. You can change the order, skip ahead, or go back. One rule is fixed: **every step saves a
+> file**, so the next step has something to work from.
 
-Read `README.md` first if you haven't. This document assumes you know what the workspace is for.
+**How this file is organised**
 
-> **This is a runbook, not a schedule.** There is no required daily process baked into the method
-> itself. What follows is the order these moves usually happen in and roughly how long they take.
-> Deviate freely. The only fixed rule is that each move leaves a file behind, so the next one has
-> something to stand on.
+- **Part 0 — Terminal basics.** Read this if you do not use the terminal often. Five minutes.
+- **Part 1 — Getting started.** Do these steps in order the first time you start a new problem area.
+- **Part 2 — Stage-by-stage reference.** What each stage is for, who is involved, and what goes wrong.
 
 ---
+
+# Part 0 — Terminal basics
+
+You need only a few terminal actions for this process. This part shows all of them.
+
+**Tip: you can ask Claude to do the terminal work for you.** After you start Claude Code (0.3
+below), you can type a request in plain English, for example: *"Copy `_template` to a new folder
+called `05-expense-capture`."* Claude shows you the command and asks before it runs it. The
+commands in this runbook are there if you want to run them yourself.
+
+### 0.1 Open the terminal
+
+1. Press **Cmd + Space** to open Spotlight.
+2. Type **Terminal** and press **Enter**.
+
+A window opens with a text prompt. You type a command, then press **Enter** to run it.
+
+### 0.2 Go to the workspace root
+
+The **workspace root** is the top folder of this workspace. It is the folder that contains
+`README.md`, `RUNBOOK.md` and `_template`. Its name depends on where you got it — for example
+`discovery-pipeline`.
+
+1. In the terminal, type `cd` followed by **one space**. Do not press Enter yet.
+2. Open Finder and find the workspace root folder.
+3. Drag the folder from Finder into the terminal window. The terminal fills in the full path.
+4. Press **Enter**.
+5. Check you are in the right place. Type `ls` and press **Enter**. You should see `README.md`,
+   `RUNBOOK.md` and `_template` in the list.
+
+> The drag-and-drop method handles folder names that contain spaces. If you type a path by hand
+> and it contains spaces, put it in quotes: `cd "Product Discovery Agentic Process"`.
+
+### 0.3 Start Claude Code
+
+1. Make sure you are at the workspace root (0.2).
+2. Type `claude` and press **Enter**.
+3. Claude Code starts inside the terminal. You now type messages to Claude, not terminal commands.
+
+**Useful commands inside Claude Code:**
+
+| Type this | What it does |
+|---|---|
+| `/clear` | Starts a fresh conversation. Use this between stages. |
+| `/exit` | Closes Claude Code and returns you to the normal terminal. |
+
+### 0.4 Run a command from this runbook
+
+1. Copy the command from the grey box in this file.
+2. Click in the terminal window and paste it with **Cmd + V**.
+3. Replace any placeholder before you press **Enter** (see the next section).
+4. Press **Enter**.
+
+Run terminal commands in the **normal terminal**, not inside Claude Code. If Claude Code is open,
+either type `/exit` first, or open a second terminal window with **Cmd + N** and repeat 0.2 in it.
+
+### 0.5 How placeholders work
+
+Text inside angle brackets is a placeholder. Replace it, **including the brackets**, with your own
+value.
+
+| The runbook says | You type (example) |
+|---|---|
+| `NN-<slug>` | `05-expense-capture` |
+| `<run>` | `01-expense-capture` |
+
 ---
 
-# PART 0 — The solo test run
+# Part 1 — Getting started
 
-**Time:** ~2.5 hours, best split across two sittings.
-**Who:** you, alone.
-**Purpose:** find out whether the process does real work, before you ask a senior pair to spend
-protected days inside it.
+Follow these steps in order the first time you start a new problem area. They take you from "I
+have a problem worth a 12-month view" to the first stage finished and checked.
 
-## 0.1 What you are trying to prove
+## Step 1 — Pick your problem and name it
 
-Six claims. Five you can test alone. One you cannot — and it is the most important.
+**What:** Decide the problem, and give it a short name that becomes its folder name.
 
-| # | Claim | How you'll know | Testable solo? |
+**How:**
+
+1. Write your problem as one sentence. Keep this sentence — you need it in Step 4.
+2. Write a short name (a "slug") for it: two to four words, lowercase, joined with hyphens. For
+   example: `expense-capture`, `reduce-churn`.
+3. Check that nobody is already working on this problem. Open the workspace root in Finder and
+   look at the folders that start with a number. Each one is a run.
+4. If your problem overlaps an existing run, work inside that run. Do not start a new one.
+
+## Step 2 — Check the shared context is ready (first run only)
+
+**What:** Every run reads the same background files in `_shared/`. If they are empty, every stage
+produces weak, generic output. Check them once for the whole workspace, not once per run.
+
+**How:**
+
+1. Open `_shared/product-context.md`. This holds facts about the product, customers and constraints.
+   - If it is mostly placeholder text, answer the questions in `_shared/setup-questionnaire.md`
+     and write the answers into `product-context.md`.
+   - A rough, fast version is fine. It only needs to be good enough that `01_frame` does not stall.
+2. Open `_shared/house-view.md`. This holds the team's opinion of what good looks like in the product.
+   - If it is thin or generic, fill it in. Write it the way you would explain it to a new senior
+     hire over coffee: specific and opinionated, not balanced.
+
+**Skip this step** if another run has already filled these files in.
+
+## Step 3 — Copy the blank method into a new run folder
+
+**What:** Every run is a copy of `_template`. You make a new copy with the next free number and your
+slug.
+
+**How:**
+
+1. Find the next free number. Look at the numbered folders in the workspace root. Pick the next
+   number that is not taken. For example, if `01`, `02`, `03` and `04` exist, use `05`.
+2. Open the terminal at the workspace root (Part 0.2).
+3. Run this command, with your number and slug:
+
+   ```
+   cp -R _template NN-<slug>
+   ```
+
+   Example: `cp -R _template 05-expense-capture`
+
+4. Check it worked:
+
+   ```
+   ls NN-<slug>
+   ```
+
+   You should see 11 stage folders (`00_setup` to `10_prototype-handoff`), plus `CLAUDE.md` and
+   `CONTEXT.md`.
+
+**Or ask Claude:** *"Copy `_template` to a new run folder called `05-expense-capture`."*
+
+## Step 4 — Fill in the run's identity
+
+**What:** Tell the run what it is about and who owns it.
+
+**How:**
+
+1. Open `NN-<slug>/CLAUDE.md` in any text editor (for example VS Code, or TextEdit).
+2. Under **Identity**, replace each placeholder:
+   - **Problem space** — your one sentence from Step 1.
+   - **Sphere of influence** — which part of the product this run has a point of view on. Be specific
+     enough that someone could tell whether a given feature is inside it or outside it. Stage `08`
+     makes its 12-month claim inside this boundary.
+   - **Pair** — the Product person and the Design person, by name. If you are working alone, write
+     that clearly. Do not leave a placeholder.
+   - **Owner of the 12-month view** — one named person. It should not automatically be the person
+     running the process.
+3. Under **Questions in scope**, write two or three questions this run must answer.
+4. Look at **Run-specific notes by stage**. Choose one:
+   - **Fill it in:** write guidance under each sub-heading (where to look for ideas in
+     `02_explore`, and the edge cases that matter in `05_pressure-test`).
+   - **Delete it:** remove the whole section, including the heading and the quoted note.
+
+   Do not leave the heading with nothing under it. A later stage will look there for guidance and
+   find nothing.
+5. Save the file.
+
+## Step 5 — Start Claude Code at the workspace root
+
+**What:** Open Claude Code in the right folder.
+
+**How:** Follow Part 0.2, then Part 0.3.
+
+> **Always start Claude Code at the workspace root.** Do not `cd` into the run folder or a stage
+> folder first. There are two reasons:
+>
+> - The root `CLAUDE.md` only loads automatically when you start at the root.
+> - The stage files use relative paths (like `../../_shared/...`). These only work when Claude
+>   reads them from their place in the folder tree.
+>
+> Stay at the root and tell Claude which folder to work in.
+
+## Step 6 — Run stage 00 (setup)
+
+**What:** List what already exists for this problem (research, analytics, designs, experts) and
+check you can actually open each item.
+
+**How:**
+
+1. In Claude Code, type:
+
+   ```
+   work NN-<slug>/00_setup
+   ```
+
+   This is a plain message, not a special command. Claude reads the root map, then the stage's
+   `CONTEXT.md`, and follows the instructions in it.
+2. Answer Claude's questions.
+3. Claude saves the result to `NN-<slug>/00_setup/output/inventory.md`.
+
+**Can you skip `00_setup`?** Yes, if you have already checked you can open everything this run
+needs, or if this is a small or solo run. In that case, go to Step 7.
+
+## Step 7 — Hold the Kickoff (a live meeting, not a Claude session)
+
+**What:** Leadership and the pair meet before framing starts. Do not skip this before `01_frame`.
+
+**How:** Book a meeting with leadership and the pair. Cover the agenda in Part 2, "Kickoff". The
+most important item: **name the owner of the 12-month view, out loud, in the room.** Then update
+the run's `CLAUDE.md` if anything changed.
+
+## Step 8 — Check the output, then stop
+
+**What:** Every stage ends with one file in its `output/` folder. A person must check it before
+moving on.
+
+**How:**
+
+1. Open the output file and read it carefully.
+2. Do the check in the **Human check** section of that stage's `CONTEXT.md`. For example, in `01_frame`:
+   read the problem statement aloud — if it could not be wrong, it says nothing.
+3. If you disagree with anything, **edit the file directly** and save it. The next stage reads
+   whatever you leave in the file.
+4. Move on only when you are happy with it.
+
+## Step 9 — Start a fresh conversation for the next stage
+
+**What:** Use a new, empty conversation for every stage.
+
+**How:**
+
+1. In Claude Code, type `/clear` and press **Enter**. (Or type `/exit`, then `claude` again.)
+2. Type the next stage, for example:
+
+   ```
+   work NN-<slug>/01_frame
+   ```
+
+**Why a fresh conversation every time:** in one long conversation, context from earlier stages
+leaks into later ones, and Claude's questions get weaker each time. A fresh start per stage is a
+little more effort, and that effort is worth it.
+
+## Step 10 — Repeat through the stages
+
+Repeat Steps 8 and 9 for each stage in this table. Part 2 has the detail for each one.
+
+| # | Stage | What you do | Output file |
 |---|---|---|---|
-| **H1** | The stages do work, not just organise it | `01_frame` **changes your mind** about the problem, rather than tidying what you already thought | Yes |
-| **H2** | Divergence is forced, not politely requested | `02_explore` gives three different **bets**, not three UIs for one bet | Yes |
-| **H3** | The process extracts trade-offs | `03_converge` makes you say something out loud you'd rather have left vague | Yes |
-| **H4** | Stage 08 produces a position, not a roadmap | A colleague could **disagree** with the one-sentence vision | Yes |
-| **H5** | The house view is load-bearing | Pass 2 of `01_frame` (house view filled) is visibly sharper than pass 1 | Yes |
-| **H6** | **It runs without you in the room** | A pair reaches a defensible position with no input from you | **No** |
+| 00 | Setup | Type `work NN-<slug>/00_setup` | `inventory.md` |
+| — | Kickoff | **Live meeting** — see Part 2 | — |
+| 01 | Frame | Type `work NN-<slug>/01_frame` | `frame.md` |
+| 02 | Explore | Type `work NN-<slug>/02_explore` | `options.md` |
+| 03 | Converge | Type `work NN-<slug>/03_converge` | `direction.md` |
+| 04 | Make tangible | Type `work NN-<slug>/04_make-tangible` | `artefact-notes.md` + prototype |
+| 05 | Pressure-test | Type `work NN-<slug>/05_pressure-test` | `pressure-test.md` |
+| 06 | Playback | **Live meeting with leadership** — see Part 2 | `playback.md` |
+| 07 | Engineering refinement | **Live meetings with Engineering** — see Part 2 | `solution-scope.md` |
+| 08 | Vision horizon | Type `work NN-<slug>/08_vision-horizon` | `vision-horizon.md` |
+| 09 | Report *(optional)* | Type `work NN-<slug>/09_report` | `vision-report.html` |
+| 10 | Prototype handoff *(optional)* | Type `work NN-<slug>/10_prototype-handoff` | `prototype-briefs/*.md` |
 
-**On H6.** This is the claim the whole programme rests on — your goal is that senior people drive
-vision in their own area, not that you steer the ship. Your solo test cannot check it. By
-definition, you are in the room. The only real test is watching a pair run `01_frame` while you
-stay out. Plan for that now; don't let a clean solo run convince you H6 is proven.
+For `06` and `07`, the decisions happen in meetings with people, not in Claude. You can still use
+Claude around the meeting: type `work NN-<slug>/06_playback` (or `07_engineering-refinement`) to
+prepare beforehand, and again afterwards to write your notes into the output file.
 
-## 0.2 Two mechanics to get right before you start
+## Check where a run is up to
 
-**Always work from the workspace root**, not from inside a stage folder. Two reasons: the root
-`CLAUDE.md` only loads automatically when the root is your working directory, and the stage
-contracts use paths like `../../_shared/...` written to resolve from the stage folder's position in
-the tree, not from wherever you happen to have opened a terminal.
+**What:** See which stages are finished. A file in a stage's `output/` folder means that stage is
+done. There is no other tracker.
 
-**Use a fresh session for each stage.** One long conversation across all four stages defeats the
-design — context bleeds between stages and you end up testing a long chat rather than the pipeline.
-A new session per stage is how the pairs will work, so it's what you should test.
+**How (Finder):** open the run folder, then open each stage's `output/` folder. Empty means not done.
 
----
-
-## 0.3 Phase A — Choose the problem (10 min)
-
-**Step 1.** Write your candidate test problem in one sentence, somewhere scratch.
-
-**Step 2.** Check it against three rules. If it fails any, pick again.
-
-| Rule                                                    | Why                                                                                                           |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **Not** one of the real problem spaces you're about to run for real | If you frame that first, the pair inherits your framing — and you've undercut the thing you said you wanted |
-| **Not** something you've already solved in your head    | If you know the answer, H1 is untestable. Nothing can change your mind.                                       |
-| Real enough that you'd recognise a bad answer            | A toy problem tests nothing                                                                                   |
-
-**Step 3.** Write a two-to-four word slug for it, lowercase, hyphenated — e.g. `expense-capture`.
-You'll use it in the folder name.
-
----
-
-## 0.4 Phase B — Fill the facts, withhold the opinion (15 min)
-
-**Step 4.** Open two files side by side:
-
-- `_shared/product-context.md` — the one you're filling
-- `_shared/setup-questionnaire.md` — the prompts that fill it
-
-**Step 5.** Fill **only** the sections your test problem actually touches. For most problems that's
-four of the seven:
-
-| Section | Fill? |
-|---|---|
-| `## Product` | Yes — always |
-| `## Customers & segments` | Yes — always |
-| `## Current state numbers` | Yes — whatever numbers bear on your problem |
-| `## Constraints` | Yes — the real ones, not the assumed ones |
-| `## Commercial` | Only if your problem has a revenue angle |
-| `## Existing assets` | Skip for the test |
-| `## Competitive / positioning context` | Skip unless your problem touches it |
-
-**Step 6.** Mark anything you're unsure of with `[assumption]`. Save.
-
-> **Gotcha — the big one.** Fifteen minutes, not an hour. Perfectionism here eats the test. A rough
-> answer in the file beats a perfect one in your head. You're filling this so `01_frame` doesn't
-> stall, not so it's complete.
-
-**Step 7.** Open `_shared/house-view.md` and confirm it still says `STATUS: EMPTY`. Do not fill it.
-That's your test variable for H5. Close it.
-
----
-
-## 0.5 Phase C — Create the test run (5 min)
-
-**Step 8.** From the workspace root, copy the blank method:
+**How (terminal):** from the workspace root, run:
 
 ```
-cp -R _template 03-test-<slug>
+ls NN-<slug>/*/output/
 ```
 
-Use your slug from Step 3. No date needed — this folder is temporary.
+The terminal lists each stage's `output/` folder and the files in it.
 
-**Step 9.** Open `03-test-<slug>/CLAUDE.md` and fill the identity block:
+**How (Claude):** ask *"What is the status of `NN-<slug>`?"*
 
-- **Problem space** — your one sentence from Step 1
-- **Questions in scope** — two or three
-- **Sphere of influence** — which part of the product this run would own a view over
-- **Pair** — write `<your name> (solo test)`
-- **Owner of the 12-month view** — write `<your name> (solo test)`
+## Optional: let Claude move between stages for you
 
-**Step 10.** Delete the whole `## Run-specific notes by stage` section, including the blockquote.
-You have nothing to put there, and four stage contracts point at it — an empty promise is worse than none.
+The `/run-pipeline` skill automates Steps 8–10. It starts a fresh helper agent for each stage,
+shows you the output, and asks you to do the human check. It stops at `06` and `07`, because those
+need live meetings.
 
-**Step 11.** Save, then verify the copy worked:
+**How:** in Claude Code, type `/run-pipeline NN-<slug>`.
 
-```
-ls 03-test-<slug>/
-```
-
-You should see eleven numbered stage folders — the nine core stages plus the optional `09_report`
-and `10_prototype-handoff` — a `CLAUDE.md` and a `CONTEXT.md`.
-
----
-
-## 0.6 Phase D — Run four stages (~90 min)
-
-Four stages, eight steps. Each stage is: run it, then do the human check.
-
-You're skipping `00` and `04`–`07`. That's legal, not a workaround — `08` has an explicit carve-out
-to run on `03`'s output alone. Those stages need real artefacts and other people; simulating them
-teaches you nothing.
-
----
-
-### Step 12 — Run `01_frame` (30 min)
-
-Start a **new session** from the workspace root. Say:
-
-> `work 03-test-<slug>/01_frame`
-
-What should happen: the stage contract is read, `operating-principles.md` and `house-view.md` load,
-and you get interrogated — not asked what you'd like written.
-
-Expect roughly: the problem behind the problem · whose problem it is · customer vs business outcome · evidence both ways · which assumptions are load-bearing · what you're choosing *not* to solve.
-
-**Output:** `03-test-<slug>/01_frame/output/frame.md`
-
-### Step 13 — Human check on `01_frame`
-
-Open `frame.md`. Read the problem statement **out loud**.
-
-- If it could not possibly be wrong, it says nothing. Rewrite it.
-- Edit anything you disagree with, directly in the file. The next stage reads whatever you leave.
-
-**Record for H1:** did this change your mind, or just tidy what you already thought?
-
----
-
-### Step 14 — Run `02_explore` (25 min)
-
-**New session**, from the workspace root:
-
-> `work 03-test-<slug>/02_explore`
-
-It should read `frame.md` as input and refuse to rank anything.
-
-**Output:** `03-test-<slug>/02_explore/output/options.md`
-
-### Step 15 — Human check on `02_explore`
-
-Open `options.md`. Point at the option that makes you uncomfortable.
-
-- If there isn't one, the set is too narrow. Go again.
-- Apply the test: if two options would be built by the same team in the same sequence, they are one option.
-
-**Record for H2:** three different bets, or three UIs for one bet?
-
----
-
-### Step 16 — Run `03_converge` (20 min)
-
-**New session**, from the workspace root:
-
-> `work 03-test-<slug>/03_converge`
-
-**Output:** `03-test-<slug>/03_converge/output/direction.md`
-
-### Step 17 — Human check on `03_converge`
-
-Find the trade-off sentence — the "we are choosing X, which means we accept worse ______" line.
-Read it to someone who wasn't involved.
-
-- If they don't wince slightly, it isn't a real trade-off.
-
-**Record for H3:** did it make you say something you'd rather have left vague?
-
-> **Break here.** The attention curve is heavy–light–heavy. Come back for stage 08 fresh.
-
----
-
-### Step 18 — Run `08_vision-horizon` (25 min)
-
-**New session**, from the workspace root:
-
-> `work 03-test-<slug>/08_vision-horizon`
-
-It will note that `07` hasn't run and proceed on `03`'s output — that's the designed carve-out, not
-an error.
-
-**Output:** `03-test-<slug>/08_vision-horizon/output/vision-horizon.md`
-
-### Step 19 — Human check on `08_vision-horizon`
-
-Take the one-sentence version to someone who works on the product but not on this problem. Ask them
-to disagree with it.
-
-- If they can't find anything to disagree with, it isn't a position yet.
-
-**Record for H4:** a position, or a roadmap in a trenchcoat?
-
----
-
-## 0.7 Phase E — The house-view A/B (40 min)
-
-This is the actual experiment. Everything before it was setup.
-
-**Step 20.** Open `_shared/house-view.md`. Fill all six sections:
-
-`What good looks like` · `What you kill on sight` · `Your standing trade-offs` ·
-`What outsiders get wrong` · `Evidence` · `Where the job breaks`
-
-Answer the way you'd explain it to a new senior hire over coffee. Specific and opinionated, not
-balanced. A house view nobody could disagree with will do nothing.
-
-**Step 21.** Start a **new session**. Run `01_frame` again on the **same problem**:
-
-> `work 03-test-<slug>/01_frame` — save the output as `frame-pass2.md`, keep `frame.md` intact
-
-**Step 22.** Open `frame.md` and `frame-pass2.md` side by side.
-
-| | |
-|---|---|
-| **Pass** | Pass 2 names a problem pass 1 missed, kills an option pass 1 entertained, or applies a standard pass 1 didn't have. It reads like a colleague who knows the business, not a competent consultant. |
-| **Fail** | Same analysis, different adjectives. |
-
-**Step 23.** If it failed: the house view file is wrong — too abstract, too balanced, or restating
-generic good practice. Rewrite it sharper and repeat Steps 21–22. **Do not conclude the folders are
-broken.** That's H5 doing its job.
-
----
-
-## 0.8 Phase F — Close out (20 min)
-
-**Step 24.** Port every fix you found into `_template/`. Not into your test copy — fixes made there
-die when you delete it.
-
-**Step 25.** If you changed any structure, re-run the walk test (command and criteria in `CLAUDE.md`).
-
-**Step 26.** Either delete `03-test-<slug>`, or rename it `_archive-test-<slug>` and keep it. A real
-filled-in example is worth more to the pairs than instructions are.
-
-**Step 27.** Write anything you learned about *how product work should go here* into
-`_shared/house-view.md`. After this test, that file is the most valuable thing in the workspace.
-
-**Step 28.** Decide: ready for the pairs on kickoff day, or does a stage contract need rewriting first?
-
----
-
-## 0.9 Gotchas
-
-| Don't | Why it matters |
-|---|---|
-| Answer the interrogation in your head | If it isn't in the file, the next stage can't use it — and you haven't tested the handoff |
-| Run all four stages in one session | Context bleeds. You'd be testing a long chat, not the pipeline. |
-| `cd` into the stage folder | The root map won't load and relative paths resolve wrong |
-| Rank options during `02_explore` | Everyone does this. The contract should stop you — if it doesn't, that's a finding. |
-| Judge output quality instead of stage function | Good output from a stage that didn't do its job means *you* did the work and the process took the credit |
-| Fix your test copy | Every fix belongs in `_template` |
-| Spend an hour on `product-context.md` | Fifteen minutes. Perfectionism here eats the test. |
-| Pick a problem that makes the process look good | You're testing it, not showcasing it |
+**Before you use it:** it usually costs more and uses more context than running the stages by
+hand, because it starts a full new agent for each stage on top of your own session. Running each
+stage by hand (Steps 8–10) is more predictable and usually cheaper. Use `/run-pipeline` only if you
+want the automation and accept that cost.
 
 ---
 ---
 
-# PART 1 — The full process
+# Part 2 — Stage-by-stage reference
 
-**Total span:** roughly two to three weeks from kickoff to a plan-ready scope, plus a later
-partner/commercial readout if you have one. Set real dates before you start — see the shape below.
+Detail on every stage: who is involved, what it is really for, and what usually goes wrong.
+Part 1 tells you what to do. This part tells you what to watch for while you do it.
 
 ## Roles at a glance
 
 | Who | Where they appear |
 |---|---|
-| Product + Design pair | Owns `00`–`06` and `08` jointly. Not Product specifying and handing over. |
-| Cross-functional leadership | Kickoff framing, SME on call, the decision at playback |
-| Senior Engineering partners | Join **after** the decision, for `07` |
-| Domain SMEs / customer-facing colleagues | Twenty-minute pulls during `01` and `05` |
-| Named owner of the 12-month view | One per problem area. Owns `08`. Should not default to whoever runs the programme. |
-| You (the programme owner) | Frame it, protect the time, remove blockers, then **get out of the room** |
+| Product + Design pair | Own `00`–`06` and `08` together. Not Product writing a spec and handing it to Design. |
+| Cross-functional leadership | Kickoff, experts on call, and the decision at the playback |
+| Senior Engineering partners | Join **after** the playback decision, for `07` |
+| Domain experts / customer-facing colleagues | Short, 20-minute conversations during `01` and `05` |
+| Named owner of the 12-month view | One per problem area. Owns `08`. Should not automatically be the person running the process. |
+| Orchestrator (often you) | Sets up the challenge, protects the time, removes blockers, then **leaves the room** |
 
----
+## Two rules to follow every time
 
-## Stage 00 — Setup (Day 0)
+1. **Start Claude Code at the workspace root**, never inside a run or stage folder. (See Part 1,
+   Step 5, for why.)
+2. **Use a fresh conversation for each stage.** Type `/clear` between stages. (See Part 1, Step 9,
+   for why.)
 
-**Who:** each pair, separately. Time: 1–2 hours. **Not a fourth working day.**
+## Day 0 — Setup (stage 00)
+
+**Who:** each pair, on their own. **A few hours at most** — not a fourth working day.
 
 **Do:**
 
-1. Walk `_shared/setup-questionnaire.md`, write answers into `_shared/product-context.md`.
-2. Inventory what exists — research (flag anything over a year old), roadmap tool entries,
-   analytics, prior designs, design-system assets, SMEs.
-3. Test **access**, not content. An asset you can't open on day one is the failure mode.
-4. Classify gaps: blocking / degrading / ignore.
-5. Book the SME time you'll need in `01` and `05`.
+1. If not done yet for this workspace: answer `_shared/setup-questionnaire.md` and write the answers
+   into `_shared/product-context.md`.
+2. List what exists: research (mark anything older than one year), product feedback tools, analytics, earlier
+   designs, design-system assets, and experts.
+3. Check you can **open** each item. You are testing access, not reading the content. The common
+   failure is finding on day one that you cannot open something you need.
+4. Sort the gaps into three groups: **blocking**, **degrading** (makes the work worse), or **ignore**.
+5. Book time with the experts you will need in `01` and `05`.
 
-**Output:** `00_setup/output/inventory.md`, and `_shared/product-context.md` populated.
+**Output:** `00_setup/output/inventory.md`
 
 **Done when:** you can open everything on the list, and reading your own context file teaches you
-something.
+something new.
 
-> **Gotcha.** This stage attracts real work like a magnet. If a pair starts framing the problem on
-> day 0, stop them. The boundary is the whole value of the stage — and they'll burn the energy
-> they need on day one.
+> **Watch out.** People start doing the real work during setup. If a pair starts framing the problem
+> on day 0, stop them. Keeping setup separate is the whole value of this stage.
 
----
+## Kickoff — a live meeting, not a folder
 
-## Kickoff (Day 1, morning)
+**Who:** leadership and the pair. This cannot be done by Claude, and it must happen before
+`01_frame` starts.
 
-**Who:** leadership + both pairs. Time: 60–90 min.
+**Agenda:**
 
-**Cover:**
+1. Why this run exists — the gap it closes, said plainly.
+2. The problem area, explained.
+3. What "decision-ready" means for this run.
+4. Which normal limits are removed on purpose — for example role boundaries, process, and
+   permission to challenge.
+5. **Name the owner of the 12-month view.** Out loud, in the room.
 
-1. Why we're doing this — the vision gap, plainly stated.
-2. Unpack each problem space.
-3. What "decision-ready" means here.
-4. Which boundaries are deliberately removed — role boundaries, process, permission to challenge.
-5. **Name the owner of each 12-month view.** Out loud, in the room.
+**Then leave.** The pair takes over. The orchestrator's only remaining jobs are removing blockers
+and getting access to experts.
 
-**Then leave.** The pair takes over. Your remaining job is blockers and SME access.
+> **Watch out.** It is tempting to define the problem for the pair during kickoff. Don't. Describe
+> the *challenge* and the *outcome* you want. The pair defines the problem in `01_frame`. If you
+> hand them a problem statement, you turn them into people who just execute — and you get only
+> execution back.
 
-> **Gotcha.** The temptation is to spec the problem while framing it. Don't. Frame the *challenge*
-> and the *outcome*; the pair defines the problem in `01_frame`. If you hand them a problem
-> statement, you've made them executors and you'll get execution back.
+## Days 1–3 — The protected working days (stages 01–05)
 
----
+These stages are **ways of thinking, not daily checkpoints**. Run them in whatever order gives the
+strongest result. You can build a prototype while you are still exploring. You can go back and
+reframe when you learn something new.
 
-## Stages 01–05 — The protected days
-
-These are **thinking moves, not daily gates**. Run them in whatever order gets to the strongest
-outcome. Prototype while still exploring. Go back and reframe when something changes your thinking.
-
-| Stage | Move | Output | Typical |
+| Stage | Question | Output | Typical time |
 |---|---|---|---|
 | `01_frame` | What are we really solving? | `frame.md` | Half a day |
-| `02_explore` | Materially different approaches | `options.md` | Half a day |
-| `03_converge` | Make the call, own the trade-off | `direction.md` | 2 hours |
-| `04_make-tangible` | Something people can react to | `artefact-notes.md` + prototype | A day |
-| `05_pressure-test` | Attack it before leadership does | `pressure-test.md` | Half a day |
+| `02_explore` | What are the really different ways to solve it? | `options.md` | Half a day |
+| `03_converge` | Which one do we choose, and what do we give up? | `direction.md` | 2 hours |
+| `04_make-tangible` | What can people see and react to? | `artefact-notes.md` + prototype | A day |
+| `05_pressure-test` | How does it break, before leadership finds out? | `pressure-test.md` | Half a day |
 
-**Attention shape:** heavy in `01`, light through `02`–`04`, heavy again in `05`. Correction is
-cheapest at the earliest gate — an hour in `01_frame` is worth a day in `05`.
+**Where your effort goes:** heavy in `01`, light in `02`–`04`, heavy again in `05`. Fixing a
+mistake early is cheapest — one hour in `01_frame` saves a day in `05`.
 
-**Per-stage gotchas:**
+**What goes wrong in each stage:**
 
-- **`01`** — Framing too broad to resolve in a few days, or so narrow it yields a feature. Also:
-  treating a low number as a UX problem when it's motivation, trust, or timing.
-- **`02`** — The pair converges early because divergence feels wasteful under time pressure. It
-  isn't. Three options that differ only in UI is one option.
-- **`03`** — False consensus. Agreement reached because nobody wanted to spend the time disagreeing.
-  Make them write the trade-off sentence down.
-- **`04`** — Fidelity creep. A beautiful screen that never says how the system *knows* something.
-  Resolve the moments that carry the bet; leave the rest grey and say so.
-- **`05`** — Validation-seeking instead of attacking. If nothing changed, be suspicious. Also: pull
-  an engineer in **now** for any technical assumption that could change the direction. Don't carry
-  it into the decision.
+- **`01`** — The problem is too broad to solve in three days, or so narrow it becomes one feature.
+  Also: treating a low number as a UX problem when the real cause is motivation, trust or timing.
+- **`02`** — The pair picks an answer too early, because exploring feels like wasted time. It is
+  not wasted. Three options that differ only in their UI are really one option.
+- **`03`** — False agreement: everyone agrees because nobody wants to spend time disagreeing. Make
+  the pair write down the trade-off in one sentence.
+- **`04`** — Too much polish. A beautiful screen that never explains how the system *knows*
+  something. Build the moments that carry the bet properly. Leave the rest rough, and say so.
+- **`05`** — Looking for proof it works, instead of trying to break it. If nothing changed after
+  this stage, be suspicious. Also: if a technical assumption could change the direction, bring in
+  an engineer **now**. Do not carry that risk into the playback.
 
-**Pair health check.** If Product did `01`–`03` and Design did `04`, the pairing failed and the
-output will show it. Both names on every file.
-
----
+**Pair health check:** if Product did `01`–`03` alone and Design did `04` alone, the pairing
+failed, and the output will show it. Both names go on every file.
 
 ## Stage 06 — Playback and decision
 
-**Who:** pair + leadership group. **A decision point, not a showcase.**
+**Who:** the pair and the leadership group. **This is a decision meeting, not a showcase.** It is
+a live meeting, not a Claude session.
 
 **Running order:**
 
-1. Recommendation first, not the journey.
-2. The trade-off, early — it invites the real conversation.
-3. The three frames that carry the argument.
-4. Remaining risks, classified.
-5. What's needed from Engineering.
-6. The 12-month view — draft. Leadership will ask; a direction with no horizon reinforces the exact
-   problem this programme exists to fix.
-7. State the decision being asked for, and what happens if it isn't made.
+1. Start with the recommendation, not the story of how you got there.
+2. State the trade-off early. It starts the real conversation.
+3. Show the three screens or frames that carry the argument.
+4. List the remaining risks, grouped by type.
+5. Say what you need from Engineering.
+6. Show a draft of the 12-month view. Leadership will ask for it. A direction without a horizon
+   repeats the exact problem this process exists to fix.
+7. State the decision you are asking for, and what happens if it is not made.
 
-**Output:** `06_playback/output/playback.md`, plus the decision and its conditions appended to
+**Output:** `06_playback/output/playback.md`. Also add the decision and its conditions to
 `_shared/decision-log.md`.
 
-**Done when:** a clear decision exists. Not "good work, let's discuss next week."
+**Done when:** there is a clear decision. "Good work, let's discuss next week" is not a decision.
 
-> **Gotchas.** No deck — a deck signals the artefact can't carry itself.
-> Write the decision down *before leaving the room*; a decision not written down did not happen.
-> And if the session ends with only slides or a good feeling, it failed.
-
----
+> **Watch out.** Do not bring a polished slide deck — it suggests the work cannot speak for itself.
+> Write the decision down **before anyone leaves the room**. A decision that is not written down
+> did not happen.
 
 ## Stage 07 — Engineering refinement
 
-**Who:** pair + senior Engineering partners.
+**Who:** the pair and senior Engineering partners, in live meetings (not a Claude session). Runs
+from the playback decision until an agreed end date. Pick a real date and keep to it.
 
-**Target:** an agreed, sufficiently resolved scope and design direction that Product, Design and
-Engineering are all comfortable planning against.
+**Goal:** a scope and design direction that is clear enough for Product, Design and Engineering to
+plan against.
 
-**Hold the line on:**
+**Push back on:**
 
-- **Scope creep dressed as feasibility.** "While we're in there" is not a technical constraint.
-- **Preference claims wearing constraint clothing.** Ask what makes it hard, specifically.
-- **Reopening the direction.** Engineering learning changes *how*. It reopens *what* only if a
-  load-bearing assumption is proven false — and then you go back to `03_converge` explicitly, not
-  by drifting.
-- **The open-ended phase.** This does not roll into more exploration.
+- **Extra scope presented as a technical need.** "While we're in there…" is not a technical
+  constraint.
+- **Preferences presented as constraints.** Ask exactly what makes it hard.
+- **Reopening the direction.** What Engineering learns can change *how* you build it. It can only
+  change *what* you build if a key assumption turns out to be false. If that happens, go back to
+  `03_converge` on purpose — do not drift there.
+- **Endless exploring.** This stage does not turn into more exploration.
 
-**Done when:** all three disciplines say the words *"I can plan against this."* Anything softer is a no.
-
----
+**Done when:** all three disciplines say the words *"I can plan against this."* Anything weaker
+means no.
 
 ## Stage 08 — Vision horizon
 
-**Who:** the named owner, with the pair. Can run alongside `07`. **Must not slip past your
-definition-of-done date.**
+**Who:** the named owner, with the pair. It can run at the same time as `07`. **Do not let it
+slip.** This is the main deliverable of the whole process. If time runs short, cut polish in
+`04` — never cut `08`.
 
-This is the deliverable the programme is named after. If time runs short, cut fidelity in `04`,
-never this.
+**It produces:**
 
-**Produces:** the bet in one sentence · Now / Next / Later with stated dependency between them ·
-capabilities gained · what you're betting against · the owner's name.
+- the bet, in one sentence
+- Now / Next / Later, with how each depends on the one before
+- the capabilities gained
+- what you are betting against
+- the owner's name
 
-> **Gotchas.** Roadmap in a trenchcoat — three horizons that are just three release trains. And
-> aspiration with no mechanism: "seamless, intelligent X" with no account of how it becomes true.
-> If AI is incidental to the bet, say so plainly; a forced AI framing is worse than an honest
-> absence.
+> **Watch out.**
+> - **A roadmap in disguise:** three horizons that are really just three release dates.
+> - **Ambition with no mechanism:** "seamless, intelligent company management" with no
+>   explanation of how it becomes true.
+> - **Forced AI:** if AI is not central to the bet, say so plainly. A forced AI story is worse than
+>   no AI story.
 
-**Done when:** someone who works on the product but not on this run can hear the one sentence and
+**Done when:** someone who works on the product, but not on this run, can hear the one sentence and
 disagree with it.
-
----
 
 ## Stages 09 and 10 — Report and prototype handoff (optional)
 
-**Who:** the pair, with the named owner. Any time after `08`. Nothing waits on these.
+**Who:** the pair, with the named owner. Any time after `08`. Nothing waits on these stages.
 
-Run them when the position needs to leave the room it was written in. Skip them when the run is
-feeding straight into `99` and the only reader is the synthesis. Skipping is a legitimate end
-state, not an incomplete run.
+Run them when the position needs to reach people outside the team. Skip them when the run only
+feeds into stage `99`. Skipping them is a normal end state, not an unfinished run.
 
-**If the run was created before these stages existed**, `09_report/` and `10_prototype-handoff/`
-won't be in it. Copy them in before running — mechanical, not a judgment call:
+**If your run folder does not have `09_report` or `10_prototype-handoff`** (because it was created
+before these stages existed), copy them in first. From the workspace root, run these three
+commands, replacing `<run>` with your run folder name:
 
 ```
 cp _template/09_report/CONTEXT.md <run>/09_report/CONTEXT.md
@@ -474,112 +492,114 @@ cp _template/10_prototype-handoff/CONTEXT.md <run>/10_prototype-handoff/CONTEXT.
 mkdir -p <run>/09_report/output <run>/10_prototype-handoff/output/prototype-briefs
 ```
 
+Or ask Claude: *"Add the `09_report` and `10_prototype-handoff` stages from `_template` to `<run>`."*
+
 ### `09_report`
 
-Renders `vision-horizon.md` as one self-contained HTML file: claims on the surface, evidence folded
-into `<details>` under each one, sources dated at the bottom. It exists because markdown doesn't
-survive a stakeholder room — it gets pasted into a deck and becomes six bullets someone else wrote.
+**What it does:** turns `vision-horizon.md` into one self-contained HTML page. Claims are on the
+surface. The evidence for each claim is one click below it. Sources are listed and dated at the
+bottom. It exists because a markdown file does not survive a stakeholder meeting — someone pastes
+it into a deck and it becomes six bullet points written by someone else.
 
-**What actually happens when you run it:** the stage fills a schema (`content.yaml`) from named
-upstream inputs first, before writing any HTML. Where an input is missing or empty — `03_converge`
-skipped, `05_pressure-test` never run, `house-view.md` still blank — it logs the gap in `gaps.md`
-instead of inventing content, then brings the list to you as one decision block: cut the claim,
-demote it to a caveat, or source it yourself. Expect this on any run that skipped stages, which
-includes every solo test.
+**How it works:**
 
-**Output:** `content.yaml`, `gaps.md`, `vision-report.html` → `09_report/output/`.
+1. The stage first fills in a structured file (`content.yaml`) from the earlier stages' outputs.
+   It does this before writing any HTML.
+2. When an input is missing or empty (for example `03_converge` was skipped, or `house-view.md` is
+   blank), it does **not** invent content. It records the gap in `gaps.md`.
+3. It then shows you all the gaps together. For each one, you choose: cut the claim, turn it into
+   a caveat, or give the source yourself.
 
-> **Gotcha.** The stage asserts nothing new — if the report reads wrong, `08` is wrong; fix it
-> there, don't patch the render. Don't pad the page to fill the design system's full rhythm on a
-> thin run. Don't drop the caveats because the page reads stronger without them — it reads stronger
-> and lands weaker.
+**Output:** `content.yaml`, `gaps.md` and `vision-report.html`, in `09_report/output/`.
 
-**Done when:** a reader can get from the number they trust least to its working in one click, on
-screen and on paper.
+> **Watch out.**
+> - The report adds nothing new. If the report is wrong, `08` is wrong. Fix `08`, not the report.
+> - On a thin run, do not add filler to make the page look complete.
+> - Do not remove the caveats to make the page sound stronger. It sounds stronger and convinces
+>   fewer people.
+
+**Done when:** a reader can go from the number they trust least to where it came from, in one
+click, on screen and on paper.
 
 ### `10_prototype-handoff`
 
-Converts the position into a brief a prototyping tool can build from — not the prototype itself,
-the instructions for it. Target: a mid-fi UI shell using the right components for a solid look and
-feel. **Not a working prototype.** One surface per falsifiable question; a horizon with no sourced,
-screen-able moment gets no surface at all — infrastructure-shaped horizons usually don't.
+**What it does:** turns the position into a brief that the your prototyping tool can build from. It
+writes the instructions, not the prototype. The target is a mid-fidelity UI shell that uses the
+right components, so it looks and feels right. **It is not a working prototype.** Each screen
+answers one question that could be proven wrong. If a horizon has no sourced moment that can be
+shown on screen, it gets no screen.
 
-**What actually happens when you run it:** before drafting anything, the stage runs an **"ask,
-don't invent" checklist** — one question at a time, per `operating-principles.md` — for every slot
-it can't source unambiguously from this run's own docs:
+**How it works:** before it writes anything, the stage runs an **"ask, don't invent" checklist**.
+It asks you one question at a time about anything it cannot find clearly in this run's files:
 
-- the exact on-screen copy, if the vision doc doesn't supply literal wording
-- which persona to cast, and whether the example should be specific or generic
-- whether a new data fixture is needed, and how specific it should be
-- the taxonomy area for the hub entry, when the surface sits on a genuine boundary
-- who owns the write — see the gotcha below, non-negotiable
-- the slug, if more than one reasonable option exists
+- the exact on-screen text, if the vision file does not give the wording
+- which persona to use
+- whether a new data fixture is needed
+- the `productArea` for the hub entry
+- the `owner:` value (see below — this must be exact)
+- the slug, if there is more than one sensible option
 
-Don't let an agent guess these and present them as settled. A first pass that skipped this step
-produced a brief with an invented persona, an invented booking and invented ad copy — all
-plausible-looking, none of it something the owner actually said.
+Do not let Claude guess these and present them as decided. An early run that skipped this checklist
+produced a brief with a made-up persona, a made-up booking and made-up ad text. It all looked
+believable, and none of it came from the owner.
 
-**Output:** `prototype-briefs/<slug>.md`, `HANDOFF.md` → `10_prototype-handoff/output/`.
+**Before you run it — check the owner's exact name.** If your prototyping tool gates edits on the
+author's name (for example `git config user.name` in the tool's own repo), check the exact value
+**in that repo** and use it as the `owner:` value. It can differ from your global settings. If it
+is wrong, later edits may be blocked without a clear error, long after this step.
 
-> **Before running it**, this stage's contract in `_template/10_prototype-handoff/CONTEXT.md`
-> assumes you have your own prototyping tool with its own brief-consumption contract (an equivalent
-> of "here's the exact `owner:` string it gates writes on, here's the file it reads"). Point the
-> stage at your tool's own docs the same way `_shared/CONTEXT.md` points stages at `_shared/` — by
-> exact path, named in that run's `CLAUDE.md`. If you don't have such a tool yet, treat this stage's
-> output as a design brief for a human, not a machine-consumable contract.
+**Output:** `prototype-briefs/<slug>.md` and `HANDOFF.md`, in `10_prototype-handoff/output/`.
 
-**Done when:** someone who hasn't read the vision can say what question the prototype answers — as
-a question, not a feature description.
+**Done when:** someone who has not read the vision can say what question the prototype answers —
+as a question, not as a feature description.
 
-The same two steps exist at the top level as `100-report/` and `101-prototype-handoff/`, running
-off the synthesised vision rather than one run's. Same method, wider claim. Use the run-level pair
-when a surface sits inside one sphere of influence; use the top-level pair when it needs two.
+### Top-level versions: `100-report` and `101-prototype-handoff`
 
----
+The same two steps also exist at the workspace root, as `100-report/` and `101-prototype-handoff/`.
+They work from the combined vision (stage `99`) instead of one run. Use the run-level versions
+when a screen belongs to one run's sphere of influence. Use the top-level versions when it spans
+two or more.
 
 ## Stage 99 — Synthesis
 
-**Who:** the programme owner, plus both owners. After both runs finish `08`.
+**Who:** the orchestrator, plus the owners of each run. After every run in scope has finished `08`.
 
-**The rule:** do not staple. Two domain visions side by side is not a product vision — it's the
-"vision by aggregation" failure, and the team will read it as one. The synthesis must produce a
-through-line neither run produced alone.
+**The rule: do not just join the runs together.** Two area visions side by side are not a product
+vision. The team will see that as "no vision, just workstreams." The synthesis must find a
+through-line that no single run found on its own.
 
-**Then the partner cut, if you have one:** commercial thesis rather than product story, and
-**committed vs aspirational labelled honestly.** Aspirational framed as committed is the fastest
-way to lose that room.
+**Then make the partner version:** a commercial argument rather than a product story. **Label what
+is committed and what is aspirational, honestly.** Presenting an aspiration as a commitment is the
+fastest way to lose that audience.
 
-**The real test:** would an engineer on the product, having read it, be able to say what the
-product is becoming? Quality of analysis is irrelevant if it doesn't change what the team
-believes. That belief is the deliverable.
-
----
+**The real test:** after reading it, could an engineer on the product say what the product is becoming? The quality of
+the analysis does not matter if it does not change what the team believes. That belief is the
+deliverable.
 
 ## When things go wrong
 
-| Symptom | Likely cause | Move |
+| What you see | Likely cause | What to do |
 |---|---|---|
-| Pair is stuck in `01` on day two | Framing too broad | Force the cut: what one thing makes the rest easier or irrelevant? |
-| Options all look the same | Converged early under time pressure | Make them generate one option they'd hate to build |
-| Nothing broke in `05` | Validation-seeking, not attacking | Run the pre-mortem properly, or bring in the known sceptic |
-| Playback ends without a decision | Recommendation led with journey, not answer | Reconvene within 48h with the ask stated first |
-| Engineering wants to reopen the direction | A load-bearing assumption may be false | Check which one. If genuinely false, return to `03`. If not, hold. |
-| `08` keeps slipping | It's being treated as a write-up, not the deliverable | It is the deliverable. Cut `04` polish instead. |
-| Output feels generic | `_shared/house-view.md` is thin | Fix the file, not the folders |
-| A stage contract feels wrong | It probably is | Rewrite it in `_template`, re-run the walk test |
+| Still stuck in `01` on day two | The problem is too broad | Force a cut: which one thing makes the rest easier, or not needed? |
+| All the options look the same | The pair chose too early, under time pressure | Ask them for one option they would hate to build |
+| Nothing broke in `05` | Looking for proof, not trying to break it | Run the pre-mortem properly, or bring in the known sceptic |
+| Playback ends with no decision | The pitch started with the story, not the answer | Meet again within 48 hours, and state the ask first |
+| Engineering wants to reopen the direction | A key assumption may be false | Find out which one. If it really is false, go back to `03`. If not, hold the line. |
+| `08` keeps slipping | It is treated as a write-up, not the deliverable | It is the deliverable. Cut polish in `04` instead. |
+| The output feels generic | `_shared/house-view.md` is thin | Fix that file, not the stage folders |
+| A stage's instructions feel wrong | They probably are | Rewrite them in `_template`, then run `./eval` to check nothing broke |
+| A stage keeps answering questions you should answer | `/run-pipeline` is guessing instead of asking | Run that stage by hand instead, or answer its list of questions directly |
 
----
+## Rules that do not change
 
-## Rules that don't bend
-
-1. Load only what the stage names. Don't point the assistant at the whole folder.
-2. One home per fact. If it's in `_shared`, point at it — don't restate it.
+1. Load only what the stage names. Do not point Claude at the whole workspace.
+2. One home for each fact. If it is in `_shared`, point to it — do not copy it.
 3. Change `_template`, never a live run.
-4. Every session ends in a file.
-5. No polished deck at playback.
+4. Every session ends with a saved file.
+5. No polished slide deck at the playback.
 6. Stage `08` is not optional.
 
 ---
 
-*Companion documents: `README.md` (what this is and why) · `CLAUDE.md` (the map) ·
-`CONTEXT.md` (the shape) · `_shared/CONTEXT.md` (the reference layer)*
+*Related files: `README.md` (what this is and why) · `CLAUDE.md` (the map) ·
+`CONTEXT.md` (the structure) · `_shared/CONTEXT.md` (the shared reference files)*
