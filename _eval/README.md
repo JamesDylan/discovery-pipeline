@@ -65,6 +65,7 @@ touch a contract.
 | `shared.dangling-reference` | Something points at a `_shared/` file that isn't there |
 | `run.stage-missing` / `run.extra-stage` | Method and instance have drifted apart |
 | `drift.template` | A live run's contract was edited instead of `_template` — the fix dies with the run |
+| `engine.edited` | An engine-owned file (per `engine.manifest`) was changed in an instance — the fix never reaches anyone else, and the next pull would overwrite it. Only runs if `engine.manifest` exists |
 | `order.out-of-sequence` | A stage produced output without its declared inputs existing. Legal if deliberate, suspicious otherwise |
 | `contract.upstream-not-run` | Informational: an input isn't there yet because its stage hasn't run |
 

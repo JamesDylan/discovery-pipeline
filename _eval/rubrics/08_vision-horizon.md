@@ -44,7 +44,7 @@ absent counter-position fails.
 
 **V7 — bounded by the sphere of influence**
 The claim stays inside the sphere of influence declared in the run's `CLAUDE.md`. A vision that
-quietly claims territory belonging to another run or to all of the product fails.
+quietly claims territory belonging to another run or to the whole product fails.
 
 **V8 — honest about AI**
 If AI is central to the bet, the mechanism is specified (what it infers, from what data, and what

@@ -48,7 +48,7 @@ and creates the internal advocate the other options need.
 
 ## Option D — Underwrite the credits and drop the problem
 
-**The bet:** product should not manage this at all. the company (or a partner) buys the residual value at
+**The bet:** product should not manage this at all. The company (or a partner) buys the residual value at
 a discount at cancellation, the company gets cash back immediately, and the credit-spending problem
 becomes someone's balance sheet.
 

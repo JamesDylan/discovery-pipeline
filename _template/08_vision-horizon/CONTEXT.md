@@ -1,7 +1,7 @@
 # 08_vision-horizon — lift the solution into a 12-month arc
 
-One job: convert a solved problem into a defensible point of view about where this part of the product
-is going. **This is the deliverable the project is named after.**
+One job: convert a solved problem into a defensible point of view about where this part of the
+product is going. **This is the deliverable the project is named after.**
 
 ## Why this stage exists
 The Accelerator brief produces a decision-ready direction for the next 1–3 months. That is not a
@@ -12,7 +12,7 @@ believes about whether the product has a direction. This stage closes that gap.
 - Reference (every run): `../../_shared/operating-principles.md`
 - Reference (every run): `../../_shared/house-view.md`
 - Reference: `../../_shared/vision-principles.md` — the six tests and five failure modes
-- Reference: `../../_shared/product-context.md` (the competitive AI narrative section)
+- Reference: `../../_shared/product-context.md` (the Competitive / positioning context section)
 - Working (this run): `../03_converge/output/direction.md`
 - Working (this run): `../CLAUDE.md` (sphere of influence — the boundary of this claim)
 - Working (this run, if complete): `../07_engineering-refinement/output/solution-scope.md`
@@ -28,8 +28,9 @@ believes about whether the product has a direction. This stage closes that gap.
 3. **Name capabilities, not features.** What can the product *do* in 12 months that it can't today?
    Capability language survives re-prioritisation; feature language doesn't.
 4. **One sentence.** Falsifiable, repeatable by a senior practitioner without a deck.
-5. **Locate it in the competitive AI narrative.** If AI is incidental, say so plainly — a forced AI
-   framing is worse than an honest absence. If AI is the mechanism, say specifically how.
+5. **Locate it in the company's AI narrative**, as recorded in the positioning section of
+   `product-context.md`. If AI is incidental, say so plainly — a forced AI framing is worse than an
+   honest absence. If AI is the mechanism, say specifically how.
 6. **Name what you're betting against.** A vision that excludes nothing means nothing.
 
 ## Blind spots to call out

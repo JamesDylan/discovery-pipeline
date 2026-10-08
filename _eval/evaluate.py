@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Vision Pipeline — workspace eval.
+12-month vision workspace — eval.
 
 Two layers:
   structure  — pure filesystem/markdown analysis. Zero tokens. Fast.
-  behaviour  — runs stages headless against a fixture and grades the output. Costs tokens.
+  behaviour  — runs stages headless against each case (synthetic fixtures + frozen real runs)
+               and grades the output. Costs tokens. Case dirs: `case_roots` in checks.json.
 
 What it enforces lives in checks.json, not here. Rubrics live in rubrics/.
 Run it with ../eval from the workspace root.
@@ -25,11 +26,9 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-try:
-    import local as local_mod
-except ImportError:  # running from elsewhere
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import local as local_mod
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import local as local_mod  # noqa: E402
+import manifest as manifest_mod  # noqa: E402
 
 EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parent
@@ -52,7 +51,7 @@ class Finding:
     severity: str
     layer: str
     message: str
-    scope: str = ""          # e.g. "01-<run-slug> / 02_explore"
+    scope: str = ""          # e.g. "01-<slug> / 02_explore"
     file: str = ""           # workspace-relative
     line: int = 0
     detail: str = ""
@@ -492,9 +491,25 @@ def check_terminals(r: Results) -> None:
                       scope=name, file=f"{name}/{required}")
 
 
+def check_engine_manifest(r: Results) -> None:
+    """Engine files are read-only in an instance. Only runs where engine.manifest exists."""
+    if not (ROOT / manifest_mod.MANIFEST).is_file():
+        return
+    problems = manifest_mod.check(ROOT)
+    for rel_path, problem in problems:
+        r.add("engine.edited", f"engine file {problem}: {rel_path}",
+              scope="engine", file=rel_path,
+              detail="In an instance: revert it (git checkout) and make the fix upstream in the engine, "
+                     "then ./pull-engine.sh the new tag. In the engine itself: run "
+                     "`python3 _eval/manifest.py build` before tagging.")
+    if not problems:
+        r.ok("engine.edited")
+
+
 def run_structure(r: Results) -> None:
     canonical = r.spec["canonical_outputs"]
     tmpl_stages = template_stages()
+    check_engine_manifest(r)
     check_walk(r)
     check_shared_references(r)
     check_terminals(r)
@@ -520,17 +535,44 @@ def claude_cli() -> str | None:
     return shutil.which("claude")
 
 
-def build_scratch(stage: str, spec: dict) -> Path:
-    """Materialise a throwaway run containing the fixture identity and seeded upstream outputs."""
+DEFAULT_CASE_ROOTS = ["_eval/fixtures", "_eval/cases"]
+
+
+def is_case(path: Path) -> bool:
+    """A case is a folder holding run/ (identity) and/or seed/ (upstream outputs per stage)."""
+    return (path / "run").is_dir() or (path / "seed").is_dir()
+
+
+def case_dirs(spec: dict, only: list[str] | None = None) -> list[Path]:
+    """
+    Behaviour cases, from checks.json `case_roots` (workspace-relative). Each root is either a case
+    itself or a folder of cases. Engine fixtures are synthetic; instance cases are frozen real runs.
+    `only` filters by case folder name or workspace-relative path.
+    """
+    found: list[Path] = []
+    for root in spec.get("case_roots") or DEFAULT_CASE_ROOTS:
+        p = ROOT / root
+        if not p.is_dir():
+            continue
+        if is_case(p):
+            found.append(p)
+        else:
+            found += sorted(c for c in p.iterdir() if c.is_dir() and is_case(c))
+    if only:
+        found = [c for c in found if c.name in only or rel(c) in only]
+    return found
+
+
+def build_scratch(stage: str, spec: dict, case: Path) -> Path:
+    """Materialise a throwaway run containing the case identity and seeded upstream outputs."""
     if SCRATCH.exists():
         shutil.rmtree(SCRATCH)
     shutil.copytree(ROOT / "_template", SCRATCH)
-    fixtures = EVAL_DIR / "fixtures"
     for name in ("CLAUDE.md", "CONTEXT.md"):
-        src = fixtures / "run" / name
+        src = case / "run" / name
         if src.exists():
             shutil.copy(src, SCRATCH / name)
-    seed = fixtures / "seed"
+    seed = case / "seed"
     if seed.is_dir():
         for stage_dir in seed.iterdir():
             if not stage_dir.is_dir():
@@ -680,7 +722,7 @@ def grade_stage(r: Results, stage: str, produced: str, scope: str, cli: str | No
 
 
 def run_behaviour(r: Results, stages: list[str], do_grade: bool, timeout: int,
-                  keep: bool, grader: str = "auto") -> None:
+                  keep: bool, grader: str = "auto", cases: list[Path] | None = None) -> None:
     cli = claude_cli()
     if not cli:
         r.add("behaviour.error",
@@ -691,14 +733,18 @@ def run_behaviour(r: Results, stages: list[str], do_grade: bool, timeout: int,
         return
 
     canonical = r.spec["canonical_outputs"]
-    for stage in stages:
-        scope = f"fixture / {stage}"
+    cases = cases if cases is not None else case_dirs(r.spec)
+    if not cases:
+        r.add("behaviour.error", "no eval cases found — check `case_roots` in _eval/checks.json",
+              layer="behaviour", scope="workspace")
+        return
+    for case, stage in ((c, s) for c in cases for s in stages):
+        scope = f"{rel(case)} / {stage}"
         if not (ROOT / "_template" / stage).is_dir():
             r.add("behaviour.error", f"{stage} is not a stage in _template",
                   layer="behaviour", scope=scope)
             continue
-
-        build_scratch(stage, r.spec)
+        build_scratch(stage, r.spec, case)
         contract = read(SCRATCH / stage / "CONTEXT.md")
         named, forbidden = split_inputs(
             next((b for h, (_, b) in sections(contract).items()
@@ -798,6 +844,12 @@ def run_legibility(r: Results, stages: list[str], keep: bool) -> None:
         return
 
     canonical = r.spec["canonical_outputs"]
+    cases = case_dirs(r.spec)
+    if not cases:
+        r.add("legibility.error", "no eval cases found — check `case_roots` in _eval/checks.json",
+              layer="legibility", scope="workspace", severity="fail")
+        return
+    case = cases[0]  # legibility tests the contract, not the thinking — one case is enough
     for stage in stages:
         scope = f"legibility / {stage}"
         if not (ROOT / "_template" / stage).is_dir():
@@ -805,7 +857,7 @@ def run_legibility(r: Results, stages: list[str], keep: bool) -> None:
                   layer="legibility", scope=scope, severity="fail")
             continue
 
-        build_scratch(stage, r.spec)
+        build_scratch(stage, r.spec, case)
         contract = read(SCRATCH / stage / "CONTEXT.md")
         named, forbidden = split_inputs(
             next((b for h, (_, b) in sections(contract).items()
@@ -955,15 +1007,17 @@ def doctor(spec: dict) -> int:
     return 0
 
 
-def manual_sheet(spec: dict, stages: list[str]) -> Path:
+def manual_sheet(spec: dict, stages: list[str], cases: list[Path] | None = None) -> Path:
+    cases = cases if cases is not None else case_dirs(spec)
+    case = rel(cases[0]) if cases else "_eval/fixtures"
     lines = ["# Behavioural eval — manual run sheet", "",
              "The `claude` CLI was not available, so run these by hand.",
              "Fresh session per stage, always from the workspace root.", ""]
     for stage in stages:
         rubric = EVAL_DIR / "rubrics" / f"{stage}.md"
         lines += [f"## {stage}", "",
-                  f"1. `cp -R _template _eval-scratch` then copy `_eval/fixtures/run/CLAUDE.md` over it,",
-                  f"   and seed upstream outputs from `_eval/fixtures/seed/`.",
+                  f"1. `cp -R _template _eval-scratch` then copy `{case}/run/CLAUDE.md` over it,",
+                  f"   and seed upstream outputs from `{case}/seed/`.",
                   f"2. New session, from the root: `work _eval-scratch/{stage}`",
                   f"3. Expect `_eval-scratch/{stage}/output/"
                   f"{', '.join(spec['canonical_outputs'].get(stage, []))}`", ""]
@@ -1259,6 +1313,9 @@ def main() -> int:
                          "behaviour (costs tokens) · all · doctor (check the local model)")
     ap.add_argument("--stage", action="append", default=[],
                     help="stage to test, repeatable. Default: the four solo-test stages.")
+    ap.add_argument("--case", action="append", default=[],
+                    help="behaviour: case to run (folder name or path), repeatable. "
+                         "Default: every case under checks.json `case_roots`.")
     ap.add_argument("--grader", default="auto", choices=["auto", "local", "claude"],
                     help="auto: local grades {local} criteria, Claude grades the judgement ones. "
                          "local: local only. claude: everything to Claude.")
@@ -1296,11 +1353,12 @@ def main() -> int:
     if args.layer in ("behaviour", "all"):
         layers.append("behaviour")
         if args.manual or not claude_cli():
-            sheet = manual_sheet(spec, stages)
+            sheet = manual_sheet(spec, stages, case_dirs(spec, args.case))
             print(f"\n  run sheet  {sheet}\n")
             if args.manual:
                 return 0
-        run_behaviour(r, stages, not args.no_grade, args.timeout, args.keep, args.grader)
+        run_behaviour(r, stages, not args.no_grade, args.timeout, args.keep, args.grader,
+                      case_dirs(spec, args.case))
 
     duration = time.time() - t0
     report, previous = write_report(r, layers, duration)

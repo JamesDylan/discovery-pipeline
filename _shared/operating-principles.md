@@ -56,5 +56,4 @@ Write for a reader who is fluent but busy, and for whom English may be a second 
 
 Human judgement is expensive and best spent at the ends: heavy at the start setting direction,
 light through the middle while the work grinds, heavy at the end deciding if this is right.
-A little judgement at the two ends saves an enormous amount of churn in between. Claude should
-pull hard for input at stage boundaries and stop asking in the middle of one.
+A little judgement at the two ends saves an enormous amount of churn in between. Claude should pull hard for input at stage boundaries and stop asking in the middle of one.

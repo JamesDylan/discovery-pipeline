@@ -18,7 +18,7 @@ gets asserted here.
 
 ## Scope of the claim
 This report speaks for **this run's sphere of influence only** — the boundary set in `../CLAUDE.md`.
-A run-level report that quietly widens into a claim about all of the product is this stage's characteristic
+A run-level report that quietly widens into a claim about the whole product is this stage's characteristic
 failure. That wider claim is `100-report`'s job, and only after `99` has done the synthesis.
 
 ## Inputs

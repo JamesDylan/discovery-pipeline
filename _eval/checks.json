@@ -36,6 +36,9 @@
     "_shared/house-view.md"
   ],
 
+  "case_roots": ["_eval/fixtures", "_eval/cases"],
+  "_case_roots_comment": "Behaviour cases. Each entry is a case (has run/ and/or seed/) or a folder of cases. Engine: synthetic fixtures. Instance: frozen real runs in _eval/cases/.",
+
   "terminal_folders": ["99-vision-synthesis", "100-report", "101-prototype-handoff"],
 
   "placeholder_tokens": [
@@ -85,6 +88,7 @@
     "identity.placeholder":           "fail",
     "identity.empty-promise":         "fail",
     "drift.template":                 "warn",
+    "engine.edited":                  "fail",
     "shared.dangling-reference":      "fail",
     "order.out-of-sequence":          "warn",
     "behaviour.output-missing":       "fail",

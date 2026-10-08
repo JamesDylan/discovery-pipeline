@@ -1,2 +1,5 @@
 .DS_Store
 .obsidian/
+_eval/report/
+_eval-scratch/
+__pycache__/
