@@ -6,7 +6,9 @@ not decide.
 ## Inputs
 - Reference (every run): `../../_shared/operating-principles.md`
 - Reference (every run): `../../_shared/house-view.md`
+- Reference: `../../_shared/prd-principles.md`
 - Reference: `../../_shared/prd-template.md`
+- Working (this run): `../01_synthesis/output/synthesis.md`
 - Working (this run): `../02_problem/output/problem.md`
 - Working (this run): `../03_scope/output/scope.md`
 - Working (this run): `../CLAUDE.md` — run identity
@@ -16,6 +18,7 @@ not decide.
 1. Write the PRD in the shape `prd-template.md` sets.
 2. Point at each candidate feature by slug. Do not specify features here; that is each feature PRD's job.
 3. If writing exposes a gap in the problem or the scope, stop and say which stage to revisit.
+4. A revision edits only the section that changed. Never rewrite the whole file.
 
 ## Outputs
 - `prd.md` → `output/` — the release PRD

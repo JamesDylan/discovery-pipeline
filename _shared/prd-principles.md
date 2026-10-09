@@ -1,6 +1,7 @@
 # What a good PRD looks like here
 
-Read by `release-prd` (`02_problem`, `03_scope`) and `feature-prd` (`01_behaviour`). The starting
+Read by `release-prd` (`02_problem`, `03_scope`, `04_prd`) and `feature-prd` (`01_behaviour`,
+`02_spec`). The starting
 tests below are generic. Replace or sharpen them with your own.
 
 > **STATUS: STARTER.** Until you edit this, the PRD pipelines run on generic practice. Add what you

@@ -6,6 +6,7 @@ decide.
 ## Inputs
 - Reference (every run): `../../_shared/operating-principles.md`
 - Reference (every run): `../../_shared/house-view.md`
+- Reference: `../../_shared/prd-principles.md`
 - Reference: `../../_shared/feature-prd-template.md`
 - Working (this run): `../00_intake/output/intake.md`
 - Working (this run): `../01_behaviour/output/behaviour.md`
@@ -14,8 +15,9 @@ decide.
 
 ## Process
 1. Write in the shape `feature-prd-template.md` sets.
-2. Write each acceptance criterion as a test: given, when, then. One behaviour per criterion.
+2. Write each acceptance criterion as a test, in the format `prd-principles.md` sets. One behaviour per criterion.
 3. Reference the upstream by section. Do not restate it.
+4. A revision edits only the section that changed. Never rewrite the whole file.
 
 ## Outputs
 - `feature-prd.md` → `output/` — the feature PRD
