@@ -12,11 +12,16 @@ prepares it and writes it up; it never simulates the meeting.
 - **Do NOT load:** `../00_intake/`, `../01_synthesis/`.
 
 ## Process
-1. **Before:** list the 3–5 questions the review must answer — risks, feasibility, open decisions.
-2. **After:** write up each decision, each change, and each open question with an owner and a date.
-3. A change to the slice goes back into `scope.md` or `prd.md`. It does not live only here.
-4. A revision edits only the section that changed. Never rewrite the whole file.
-5. If you changed `prd.md`, run `./digest <run>` from the workspace root.
+1. **Mechanical checks first.** From the workspace root, run `./eval prd <run>`. It checks
+   pointers, IDs, house values and leftover template text for free. Put its findings on the
+   review list as they are. Do not spend review time re-checking what it checks.
+2. **Before:** list the 3–5 questions the review must answer — risks, feasibility, open decisions.
+3. **After:** write up each decision, each change, and each open question with an owner and a date.
+4. A change to the slice goes back into `scope.md` or `prd.md`. It does not live only here.
+5. A revision edits only the section that changed. Never rewrite the whole file.
+6. If you changed `prd.md`, run `./digest <run>` from the workspace root.
+7. After changing the PRD, run `./eval prd <run>` again. The review is done when it shows
+   no finding the review did not accept on purpose.
 
 ## Outputs
 - `review.md` → `output/` — decisions, changes made, open questions with owners and dates

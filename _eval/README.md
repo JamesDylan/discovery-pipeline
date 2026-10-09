@@ -244,7 +244,9 @@ it says Ready (`prd_checks.ready_status` in `checks.json`), except `ready_exempt
 `question.status`, `screen.change`, `sensitivity`. Values match exactly, case included. A missing
 key skips that check and is reported once as `prd.vocab-missing` (`info`).
 
-`./eval prd` writes the same report as the other layers. It is not part of plain `./eval`.
+`./eval prd` writes the same report as the other layers. It is not part of plain `./eval`. The
+review stages (`release-prd/05_review`, `feature-prd/03_review`) run it first and again after each
+change, so the review meeting spends its time on judgement.
 
 ---
 
