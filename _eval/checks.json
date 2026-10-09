@@ -116,20 +116,8 @@
       "behaviour_stages": []
     }
   },
-  "prd": {
-    "_comment": "./eval digest (_eval/prd_digest.py). It reads `source` in `stage`/output/ and writes `output` beside it. Sections are matched by heading (regex, case-insensitive). id_patterns are generic defaults; a house overrides them in a ```prd-rules block in rules_file, as lines of `id.<kind>: regex`.",
-    "stage": "04_prd",
-    "source": "prd.md",
-    "output": "prd-digest.md",
-    "rules_file": "_shared/prd-principles.md",
-    "fixture": "_eval/fixtures/prd-digest",
-    "id_patterns": {
-      "requirement": "[A-Z]+(?:-[A-Z0-9]+)*-\\d+",
-      "question": "Q\\d+(?:\\.\\d+)*",
-      "metric": "[A-Z]+\\d+",
-      "feature": "F\\d+"
-    }
-  },
+  "prd_digest_fixture": "_eval/fixtures/prd-digest",
+  "_prd_digest_fixture_comment": "A synthetic release PRD and the digest ./digest must make of it (prd.digest-fixture). The digest itself is a process tool: _tools/prd_digest.py.",
   "entrypoints": [
     "CLAUDE.md",
     "CONTEXT.md",

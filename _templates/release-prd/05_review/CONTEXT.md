@@ -16,6 +16,7 @@ prepares it and writes it up; it never simulates the meeting.
 2. **After:** write up each decision, each change, and each open question with an owner and a date.
 3. A change to the slice goes back into `scope.md` or `prd.md`. It does not live only here.
 4. A revision edits only the section that changed. Never rewrite the whole file.
+5. If you changed `prd.md`, run `./digest <run>` from the workspace root.
 
 ## Outputs
 - `review.md` → `output/` — decisions, changes made, open questions with owners and dates

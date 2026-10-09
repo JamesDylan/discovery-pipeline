@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Release PRD digest. Part of the process: stage contracts tell the agent when to run it.
+# Run from the workspace root. Free, no model, under a second.
+#
+#   ./digest <release-run>          write <run>/04_prd/output/prd-digest.md from prd.md
+#   ./digest <path/to/prd.md>       the same, given a feature run's Upstream: path
+#
+# Safe to run any time: if the digest is current it changes nothing. See _tools/README.md.
+set -euo pipefail
+cd "$(dirname "$0")"
+export PYTHONDONTWRITEBYTECODE=1
+exec python3 _tools/prd_digest.py "$@"

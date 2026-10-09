@@ -1,4 +1,4 @@
-<!-- prd-digest of prd.md sha:fc4a1e47419d — written by ./eval digest. Do not edit; edit the PRD and run it again. -->
+<!-- prd-digest of prd.md sha:fc4a1e47419d — written by ./digest. Do not edit; edit the PRD and run it again. -->
 
 > Digest of `prd.md`: one line per item. Open a full section of the PRD only when a line here is not enough, and name the section you opened.
 

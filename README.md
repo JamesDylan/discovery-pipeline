@@ -42,8 +42,10 @@ Prefer doing it by hand? Copy `_templates/<pipeline>`, rename it `NN-your-proble
 | `feature-prd` | One feature, specified for agentic delivery. Anyone can start one at any time |
 
 A run can build on one other run's output: its `Upstream:` line. A feature PRD usually points at a
-release PRD's `04_prd/output/prd.md`. When that file changes, `./eval` flags every feature PRD built
-on the old version (`lineage.stale`). Re-run the stage, or check it and type
+release PRD's `04_prd/output/prd.md`, but reads `prd-digest.md` beside it: one line per ID instead
+of the whole PRD. The agent keeps the digest current with `./digest`, as the stage contracts say;
+you never run it yourself. When the digest changes, `./eval` flags every feature PRD built on the
+old version (`lineage.stale`). Re-run the stage, or check it and type
 `./eval --accept <run>/<stage>`.
 
 `release-prd` and `feature-prd` are skeletons: the stages and checks are set, the processes are first

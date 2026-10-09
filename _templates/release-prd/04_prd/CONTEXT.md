@@ -19,11 +19,12 @@ not decide.
 2. Point at each candidate feature by slug. Do not specify features here; that is each feature PRD's job.
 3. If writing exposes a gap in the problem or the scope, stop and say which stage to revisit.
 4. A revision edits only the section that changed. Never rewrite the whole file.
-5. Run `./eval digest <run>` from the workspace root. Run it again after every revision.
+5. Run `./digest <run>` from the workspace root, after writing and after every revision. It is free
+   and makes the digest the feature runs read.
 
 ## Outputs
 - `prd.md` → `output/` — the release PRD
-- `prd-digest.md` → `output/` — written by `./eval digest`, never by hand. One line per ID; feature
+- `prd-digest.md` → `output/` — written by `./digest`, never by hand. One line per ID; feature
   runs read it instead of `prd.md`
 
 ## Human check

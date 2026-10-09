@@ -9,8 +9,10 @@ yet.
 - Reference: `../../_shared/product-context.md`
 - Working: `../CLAUDE.md` — run identity
 - Working (upstream): the `prd-digest.md` beside the file the `Upstream:` line names, not that file
-  itself. No digest there: load the upstream file. Open a full upstream section only when the
-  digest line is not enough, and name the section you opened.
+  itself. First run `./digest <Upstream path>` from the workspace root; it is free and refreshes the
+  digest if the PRD changed. If it says there is no release PRD there, load the upstream file
+  instead. Open a full upstream section only when the digest line is not enough, and name the
+  section you opened.
 - **Do NOT load:** any other stage folder of this run.
 
 ## Process

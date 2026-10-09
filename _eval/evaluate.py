@@ -29,9 +29,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "_tools"))
 import local as local_mod  # noqa: E402
 import manifest as manifest_mod  # noqa: E402
-import prd_digest as prd_digest_mod  # noqa: E402
+import prd_digest as prd_digest_mod  # noqa: E402  (process tool; the eval only checks its output)
 
 EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parent
@@ -810,19 +811,20 @@ def check_prd_digests(r: Results) -> None:
     """
     A release PRD's digest must match the PRD it was built from: feature runs read the digest, not
     the PRD. Also re-digests the engine's synthetic fixture and compares it with the expected file,
-    so a parser change that alters the output is caught.
+    so a parser change that alters the output is caught. Making the digest is `./digest`, not this.
     """
-    cfg = prd_digest_mod.load_config(r.spec)
-    fixture = ROOT / cfg.get("fixture", "")
-    if cfg.get("fixture") and (fixture / "prd.md").is_file() and (fixture / "expected-digest.md").is_file():
-        got = prd_digest_mod.build(read(fixture / "prd.md"), prd_digest_mod.load_config(r.spec, house=False))
+    cfg = prd_digest_mod.config()
+    fixture = ROOT / r.spec.get("prd_digest_fixture", "")
+    if r.spec.get("prd_digest_fixture") and (fixture / "prd.md").is_file() \
+            and (fixture / "expected-digest.md").is_file():
+        got = prd_digest_mod.build(read(fixture / "prd.md"), prd_digest_mod.load_config(house=False))
         if norm(got) == norm(read(fixture / "expected-digest.md")):
             r.ok("prd.digest-fixture")
         else:
             r.add("prd.digest-fixture", "the digest of the synthetic fixture PRD no longer matches "
                   "expected-digest.md", file=rel(fixture),
                   detail="The parser changed. If the new output is right, regenerate it: "
-                         f"./eval digest --file {rel(fixture / 'prd.md')} --generic "
+                         f"./digest --file {rel(fixture / 'prd.md')} --generic "
                          f"--out {rel(fixture / 'expected-digest.md')}")
 
     for run in runs():
@@ -830,7 +832,7 @@ def check_prd_digests(r: Results) -> None:
         if not src.is_file():
             continue
         out = src.with_name(cfg["output"])
-        fix = f"./eval digest {run.name}"
+        fix = f"./digest {run.name}"
         if not out.is_file():
             r.add("prd.digest-missing", f"{cfg['stage']} has {cfg['source']} but no {cfg['output']}",
                   scope=run.name, file=rel(src.parent),
@@ -1633,8 +1635,6 @@ def summarise(r: Results, report: Path, previous: dict | None, duration: float) 
 # ───────────────────────────────────────────────────────────── main
 
 def main() -> int:
-    if sys.argv[1:2] == ["digest"]:
-        return prd_digest_mod.main(sys.argv[2:])
     ap = argparse.ArgumentParser(
         prog="eval", description="Evaluate the pipeline workspace.")
     ap.add_argument("layer", nargs="?", default="structure",

@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """
 PRD digest — a short index of a release PRD, for the feature runs that build on it. No model.
+Part of the process, not the eval: agents run it as a stage step. See `_tools/README.md`.
 
-  ./eval digest <release-run>          write <run>/04_prd/output/prd-digest.md from prd.md
-  ./eval digest --file PRD [--out OUT] digest any PRD file; prints to stdout without --out
+  ./digest <release-run>               write <run>/04_prd/output/prd-digest.md from prd.md
+  ./digest <path/to/prd.md>            the same, given the path a feature run's Upstream: line names.
+                                       Exit 3, "no release PRD there", if the path is anything else
+  ./digest --file PRD [--out OUT]      digest any PRD file; prints to stdout without --out
 
 A feature run needs the parent's IDs and the one-line meaning of each, not the whole document. The
 digest keeps one line per item: header, terms, which source wins, business rules, access, business
 requirements (no acceptance criteria), open questions, screens, features and metrics. It finds them
 by heading and by table columns, so it is not tied to one house's template.
 
-What it looks for lives in checks.json `prd`: section headings and default ID patterns. A house
-overrides the ID patterns in a ```prd-rules block in `prd.rules_file` (lines of `id.<kind>: regex`).
+Section headings and ID patterns have generic defaults below. A house overrides them in a
+```prd-rules block in `_shared/prd-principles.md`, as lines of `id.<kind>: regex` or
+`section.<name>: regex`.
 
-The first line records a hash of the PRD it was built from. `./eval` warns when they disagree.
-No third-party modules. Runs on the stock macOS python3.
+The first line records a hash of the PRD it was built from; `./eval` checks it still matches.
+Running it when the digest is current changes nothing. No third-party modules.
 """
 
 from __future__ import annotations
@@ -22,13 +26,11 @@ from __future__ import annotations
 import argparse
 import functools
 import hashlib
-import json
 import re
 import sys
 from pathlib import Path
 
-EVAL_DIR = Path(__file__).resolve().parent
-ROOT = EVAL_DIR.parent
+ROOT = Path(__file__).resolve().parent.parent
 
 STAMP_RE = re.compile(r"<!-- prd-digest of (\S+) sha:([0-9a-f]+)")
 LINK_RE = re.compile(r"\[([^\]]*)\]\([^)]*\)")
@@ -65,24 +67,19 @@ DEFAULTS = {
 
 # ───────────────────────────────────────────────────────────── config
 
-def load_config(spec: dict | None = None, house: bool = True) -> dict:
+def load_config(house: bool = True) -> dict:
     """
-    checks.json `prd` over the defaults, then the house's ```prd-rules id patterns over both.
+    The defaults, with the house's ```prd-rules overrides on top.
     house=False skips the house block: the engine fixture is checked against generic patterns.
     """
-    if spec is None:
-        try:
-            spec = json.loads((EVAL_DIR / "checks.json").read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            spec = {}
-    user = spec.get("prd", {})
-    cfg = {**DEFAULTS, **{k: v for k, v in user.items() if not k.startswith("_")}}
-    cfg["sections"] = {**DEFAULTS["sections"], **user.get("sections", {})}
-    cfg["id_patterns"] = {**DEFAULTS["id_patterns"], **user.get("id_patterns", {})}
+    cfg = {**DEFAULTS, "sections": dict(DEFAULTS["sections"]),
+           "id_patterns": dict(DEFAULTS["id_patterns"])}
     if house:
         for key, value in house_rules(ROOT / cfg["rules_file"]).items():
             if key.startswith("id."):
                 cfg["id_patterns"][key[3:]] = value
+            elif key.startswith("section."):
+                cfg["sections"][key[8:]] = value
     return cfg
 
 
@@ -373,7 +370,7 @@ def build(text: str, cfg: dict, source_name: str = "prd.md") -> str:
         part_metrics(lines, cfg),
     ]
     head = [
-        f"<!-- prd-digest of {source_name} sha:{source_hash(text)} — written by ./eval digest. "
+        f"<!-- prd-digest of {source_name} sha:{source_hash(text)} — written by ./digest. "
         "Do not edit; edit the PRD and run it again. -->",
         "",
         f"> Digest of `{source_name}`: one line per item. Open a full section of the PRD only when a "
@@ -403,9 +400,14 @@ def is_stale(prd: Path, digest_file: Path) -> bool:
 # ───────────────────────────────────────────────────────────── cli
 
 def find_run(name: str) -> Path | None:
-    """A run folder by exact name, or by unique partial name ("expense" → "04-expense-capture")."""
-    name = name.rstrip("/")
-    if not name or "/" in name or name.startswith("."):
+    """
+    A run folder by exact name, by unique partial name ("expense" → "04-expense-capture"), or by a
+    workspace-relative path inside it, such as a feature run's `Upstream:` value.
+    """
+    name = name.removeprefix("./").strip("/")
+    if "/" in name:
+        name = name.split("/", 1)[0]
+    if not name or name.startswith("."):
         return None  # a run is a top-level folder; nothing outside the workspace
     runs = [p for p in ROOT.iterdir() if p.is_dir() and re.match(r"^\d+-", p.name)]
     exact = [p for p in runs if p.name == name]
@@ -421,9 +423,10 @@ def find_run(name: str) -> Path | None:
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(prog="eval digest",
+    ap = argparse.ArgumentParser(prog="digest",
                                  description="Write a release PRD's digest for its feature runs. No model.")
-    ap.add_argument("run", nargs="?", help="release run folder, or a unique part of its name")
+    ap.add_argument("run", nargs="?",
+                    help="release run folder, a unique part of its name, or a path inside it")
     ap.add_argument("--file", help="digest this PRD file instead of a run's")
     ap.add_argument("--out", help="with --file: write here instead of stdout")
     ap.add_argument("--generic", action="store_true",
@@ -450,12 +453,19 @@ def main(argv: list[str]) -> int:
         print(f"no run matches '{args.run}'", file=sys.stderr)
         return 2
     src = run / cfg["stage"] / "output" / cfg["source"]
+    if "/" in args.run.strip("/") and (ROOT / args.run.removeprefix("./")).resolve() != src.resolve():
+        print(f"no release PRD there: {args.run} is not {src.relative_to(ROOT)}. "
+              "No digest; read that file directly.", file=sys.stderr)
+        return 3
     if not src.is_file():
         print(f"{src.relative_to(ROOT)} does not exist — run {cfg['stage']} first", file=sys.stderr)
         return 2
     text = src.read_text(encoding="utf-8")
     out = src.with_name(cfg["output"])
     result = build(text, cfg, cfg["source"])
+    if out.is_file() and out.read_text(encoding="utf-8") == result:
+        print(f"  {out.relative_to(ROOT)} is up to date")
+        return 0
     out.write_text(result, encoding="utf-8")
     words, total = len(result.split()), len(text.split())
     print(f"  wrote {out.relative_to(ROOT)}  ({words} words, {100 * words // max(total, 1)}% of "

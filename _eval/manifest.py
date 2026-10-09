@@ -35,6 +35,8 @@ OWNED = [
     "README.md",
     "RUNBOOK.md",
     "eval",
+    "digest",
+    "_tools/",
     "pull-engine.sh",
     "_templates/",
     "_eval/",

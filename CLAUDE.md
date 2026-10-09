@@ -18,6 +18,7 @@ holds almost nothing. It knows no pipeline's stages; each pipeline's `CONTEXT.md
 | Asked how to use the workspace, start a run, or run a stage | `README.md` |
 | Facilitating a discovery programme, workshop, or solo test | `RUNBOOK.md` |
 | Checking whether the folders still work after editing them | `./eval` — see `_eval/README.md` |
+| Running a script a stage contract names (e.g. `./digest`) | `_tools/README.md` |
 
 ## Commands
 
@@ -51,7 +52,8 @@ read the running order from the template, not the run's copy — the template is
 3. Show `optional` steps and terminal folders as "not run", never as incomplete. Don't open any
    output file.
 4. Mention any `lineage.stale` warning from the last `./eval` — an output built on an input that
-   has since changed.
+   has since changed — and any `prd.digest-stale` or `prd.digest-missing`. The fix for those is
+   `./digest <run>`.
 
 **`work <run>`** — guided: run the next step.
 1. If the run's `CLAUDE.md` still has placeholders, fill those first (as in `new`, step 3).
