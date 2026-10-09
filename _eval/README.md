@@ -18,6 +18,7 @@ From the workspace root:
 ./eval doctor           # check the local Ollama model, once
 ./eval legibility       # local model runs the stages — free, repeatable
 ./eval all              # everything, including the graded behavioural layer
+./eval digest <run>     # write a release PRD's digest for its feature runs — no model
 ```
 
 Terminal gives you a verdict and the top failures. The full detail is the HTML report at
@@ -202,6 +203,25 @@ contract's Inputs mention it. While an output is unchanged, any input whose hash
 - It cannot see changes made before the first `./eval` after a stage ran, beyond that timestamp
   check. Run `./eval` after each stage to keep the history tight.
 
+## PRD digest
+
+A feature run needs its release PRD's IDs and the one-line meaning of each, not the whole document.
+`./eval digest <release-run>` reads `04_prd/output/prd.md` and writes `prd-digest.md` beside it:
+header, terms, which source wins, business rules, access, business requirements (no acceptance
+criteria), open questions (closed ones as IDs only), screens, features and metrics. No model.
+
+- It finds items by heading and table column, as set in `checks.json` `prd`. ID patterns there are
+  generic. A house overrides them in a ` ```prd-rules ` block in `_shared/prd-principles.md`, as
+  lines of `id.<kind>: regex`.
+- The digest's first line holds a hash of the PRD. `./eval` warns `prd.digest-stale` when they no
+  longer match, and `prd.digest-missing` when there is a PRD and no digest.
+- Feature stages load the digest beside their `Upstream:` file, so lineage hashes the digest, not
+  the PRD.
+- `prd.digest-fixture` re-digests `fixtures/prd-digest/prd.md` and compares it with
+  `expected-digest.md`. If you changed the parser on purpose, regenerate the expected file with the
+  command the finding prints.
+- `./eval digest --file <prd> [--out <file>]` digests any PRD, for trying it on a real one.
+
 ---
 
 ## Changing what it enforces
@@ -254,10 +274,12 @@ _eval/
   evaluate.py        the engine. Stdlib only, no dependencies
   local.py           Ollama client, rubric routing, the legibility agent loop
   checks.json        what is enforced. Edit this, not the code
+  prd_digest.py      ./eval digest: a release PRD's one-line-per-ID digest. Stdlib only
   rubrics/<pipeline>/          one markdown rubric per gradeable stage, criteria tagged {local} or not
   fixtures/<pipeline>/
     run/CLAUDE.md              the fixture run identity — a problem space no live run uses
     seed/<stage>/              pre-made upstream outputs so any stage can be tested in isolation
+  fixtures/prd-digest/         a synthetic release PRD and the digest it must produce
   lineage.json                 instance only: which input versions each output was built from. Commit it
   report/                      generated: index.html, results.json, history.jsonl
 ```

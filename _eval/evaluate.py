@@ -31,6 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import local as local_mod  # noqa: E402
 import manifest as manifest_mod  # noqa: E402
+import prd_digest as prd_digest_mod  # noqa: E402
 
 EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parent
@@ -673,7 +674,8 @@ def output_files(stage_dir: Path) -> list[Path]:
 def stage_inputs(run: Path, stage: str) -> list[Path]:
     """
     The working files a stage output was built from: the same-run upstream outputs its contract
-    names, plus the run's Upstream file when the contract's Inputs mention it.
+    names, plus the run's Upstream file when the contract's Inputs mention it. A contract that
+    names the PRD digest reads the digest beside the Upstream file instead, when there is one.
     """
     text = read(run / stage / "CONTEXT.md")
     body = next((b for h, (_, b) in sections(text).items() if h.lower().startswith("inputs")), "")
@@ -686,7 +688,11 @@ def stage_inputs(run: Path, stage: str) -> list[Path]:
                 found.append(p)
     upstream = upstream_of(run)
     if upstream and re.search(r"\bupstream\b", body, re.I) and (ROOT / upstream).is_file():
-        found.append((ROOT / upstream).resolve())
+        target = (ROOT / upstream).resolve()
+        digest_name = prd_digest_mod.config()["output"]
+        if digest_name in body and target.with_name(digest_name).is_file():
+            target = target.with_name(digest_name)
+        found.append(target)
     return found
 
 
@@ -796,7 +802,44 @@ def run_structure(r: Results, accept: list[str] | None = None) -> None:
             check_drift(r, run, stage, pipeline)
             check_order(r, run, stage, canonical)
 
+    check_prd_digests(r)
     check_lineage(r, accept or [])
+
+
+def check_prd_digests(r: Results) -> None:
+    """
+    A release PRD's digest must match the PRD it was built from: feature runs read the digest, not
+    the PRD. Also re-digests the engine's synthetic fixture and compares it with the expected file,
+    so a parser change that alters the output is caught.
+    """
+    cfg = prd_digest_mod.load_config(r.spec)
+    fixture = ROOT / cfg.get("fixture", "")
+    if cfg.get("fixture") and (fixture / "prd.md").is_file() and (fixture / "expected-digest.md").is_file():
+        got = prd_digest_mod.build(read(fixture / "prd.md"), prd_digest_mod.load_config(r.spec, house=False))
+        if norm(got) == norm(read(fixture / "expected-digest.md")):
+            r.ok("prd.digest-fixture")
+        else:
+            r.add("prd.digest-fixture", "the digest of the synthetic fixture PRD no longer matches "
+                  "expected-digest.md", file=rel(fixture),
+                  detail="The parser changed. If the new output is right, regenerate it: "
+                         f"./eval digest --file {rel(fixture / 'prd.md')} --generic "
+                         f"--out {rel(fixture / 'expected-digest.md')}")
+
+    for run in runs():
+        src = run / cfg["stage"] / "output" / cfg["source"]
+        if not src.is_file():
+            continue
+        out = src.with_name(cfg["output"])
+        fix = f"./eval digest {run.name}"
+        if not out.is_file():
+            r.add("prd.digest-missing", f"{cfg['stage']} has {cfg['source']} but no {cfg['output']}",
+                  scope=run.name, file=rel(src.parent),
+                  detail=f"Feature runs read the digest, not the PRD. Run: {fix}")
+        elif prd_digest_mod.is_stale(src, out):
+            r.add("prd.digest-stale", f"digest stale — {cfg['source']} changed after {cfg['output']} "
+                  "was written", scope=run.name, file=rel(out), detail=f"Run: {fix}")
+        else:
+            r.ok("prd.digest-stale")
 
 
 # ───────────────────────────────────────────────────────────── behavioural layer
@@ -1590,6 +1633,8 @@ def summarise(r: Results, report: Path, previous: dict | None, duration: float) 
 # ───────────────────────────────────────────────────────────── main
 
 def main() -> int:
+    if sys.argv[1:2] == ["digest"]:
+        return prd_digest_mod.main(sys.argv[2:])
     ap = argparse.ArgumentParser(
         prog="eval", description="Evaluate the pipeline workspace.")
     ap.add_argument("layer", nargs="?", default="structure",

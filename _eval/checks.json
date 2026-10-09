@@ -80,7 +80,8 @@
           "scope.md"
         ],
         "04_prd": [
-          "prd.md"
+          "prd.md",
+          "prd-digest.md"
         ],
         "05_review": [
           "review.md"
@@ -113,6 +114,20 @@
       ],
       "terminal_folders": [],
       "behaviour_stages": []
+    }
+  },
+  "prd": {
+    "_comment": "./eval digest (_eval/prd_digest.py). It reads `source` in `stage`/output/ and writes `output` beside it. Sections are matched by heading (regex, case-insensitive). id_patterns are generic defaults; a house overrides them in a ```prd-rules block in rules_file, as lines of `id.<kind>: regex`.",
+    "stage": "04_prd",
+    "source": "prd.md",
+    "output": "prd-digest.md",
+    "rules_file": "_shared/prd-principles.md",
+    "fixture": "_eval/fixtures/prd-digest",
+    "id_patterns": {
+      "requirement": "[A-Z]+(?:-[A-Z0-9]+)*-\\d+",
+      "question": "Q\\d+(?:\\.\\d+)*",
+      "metric": "[A-Z]+\\d+",
+      "feature": "F\\d+"
     }
   },
   "entrypoints": [
@@ -203,6 +218,9 @@
     "shared.dangling-reference": "fail",
     "order.out-of-sequence": "warn",
     "lineage.stale": "warn",
+    "prd.digest-missing": "warn",
+    "prd.digest-stale": "warn",
+    "prd.digest-fixture": "fail",
     "behaviour.output-missing": "fail",
     "behaviour.output-empty": "fail",
     "behaviour.forbidden-read": "fail",

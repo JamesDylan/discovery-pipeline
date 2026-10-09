@@ -11,12 +11,15 @@ decide.
 - Working (this run): `../00_intake/output/intake.md`
 - Working (this run): `../01_behaviour/output/behaviour.md`
 - Working (this run): `../CLAUDE.md` — run identity
+- Working (upstream): the `prd-digest.md` beside the file the `Upstream:` line names, not that file
+  itself. No digest there: load the upstream file. Open a full upstream section only when the
+  digest line is not enough, and name the section you opened.
 - **Do NOT load:** `../03_review/` onward.
 
 ## Process
 1. Write in the shape `feature-prd-template.md` sets.
 2. Write each acceptance criterion as a test, in the format `prd-principles.md` sets. One behaviour per criterion.
-3. Reference the upstream by section. Do not restate it.
+3. Reference the upstream by ID or section. Do not restate it.
 4. A revision edits only the section that changed. Never rewrite the whole file.
 
 ## Outputs

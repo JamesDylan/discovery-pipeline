@@ -9,6 +9,9 @@ write the PRD yet.
 - Reference: `../../_shared/prd-principles.md`
 - Working (this run): `../00_intake/output/intake.md`
 - Working (this run): `../CLAUDE.md` — run identity
+- Working (upstream): the `prd-digest.md` beside the file the `Upstream:` line names, not that file
+  itself. No digest there: load the upstream file. Open a full upstream section only when the
+  digest line is not enough, and name the section you opened.
 - **Do NOT load:** `../02_spec/` onward.
 
 ## Process
