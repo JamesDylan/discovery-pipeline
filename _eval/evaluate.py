@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-12-month vision workspace — eval.
+Pipeline workspace — eval.
 
-Two layers:
-  structure  — pure filesystem/markdown analysis. Zero tokens. Fast.
-  behaviour  — runs stages headless against each case (synthetic fixtures + frozen real runs)
-               and grades the output. Costs tokens. Case dirs: `case_roots` in checks.json.
+Three layers:
+  structure   — pure filesystem/markdown analysis, plus output lineage. Zero tokens. Fast.
+  legibility  — a local model executes stages; checks mechanics only. Free.
+  behaviour   — runs stages headless against each case (synthetic fixtures + frozen real runs)
+                and grades the output. Costs tokens. Case dirs: `case_roots` in checks.json.
 
-What it enforces lives in checks.json, not here. Rubrics live in rubrics/.
-Run it with ../eval from the workspace root.
+Every run follows one pipeline (the `Pipeline:` line in its CLAUDE.md), whose blank method lives in
+_templates/<pipeline>/. What it enforces lives in checks.json, not here. Rubrics live in
+rubrics/<pipeline>/. Run it with ./eval from the workspace root.
 """
 
 from __future__ import annotations
@@ -152,9 +154,58 @@ def split_inputs(body: str) -> tuple[list[str], list[str]]:
 
 # ───────────────────────────────────────────────────────────── discovery
 
-def template_stages() -> list[str]:
-    return sorted(p.name for p in (ROOT / "_template").iterdir()
-                  if p.is_dir() and STAGE_RE.match(p.name))
+TYPES = ("core", "live", "optional")
+IDENTITY_RE = r"\*\*{field}:\*\*\s*(.+)"
+
+
+def templates_root(spec: dict) -> Path:
+    return ROOT / spec.get("templates_dir", "_templates")
+
+
+def pipeline_spec(spec: dict, name: str) -> dict:
+    return spec.get("pipelines", {}).get(name, {})
+
+
+def template_dir(spec: dict, name: str) -> Path:
+    return templates_root(spec) / name
+
+
+def template_folders(spec: dict) -> list[Path]:
+    root = templates_root(spec)
+    return sorted(p for p in root.iterdir() if p.is_dir()) if root.is_dir() else []
+
+
+def template_stages(spec: dict, name: str) -> list[str]:
+    tdir = template_dir(spec, name)
+    if not tdir.is_dir():
+        return []
+    return sorted(p.name for p in tdir.iterdir() if p.is_dir() and STAGE_RE.match(p.name))
+
+
+def identity_field(run: Path, field_name: str) -> str:
+    """Value of a `- **Field:** value` line in a run's CLAUDE.md, backticks stripped. "" if absent."""
+    m = re.search(IDENTITY_RE.format(field=re.escape(field_name)), read(run / "CLAUDE.md"))
+    return m.group(1).strip().strip("`").strip() if m else ""
+
+
+def pipeline_of(run: Path, spec: dict) -> str:
+    """A run's pipeline. Runs made before pipelines existed have no line and are the default."""
+    return identity_field(run, "Pipeline") or spec.get("default_pipeline", "discovery")
+
+
+def upstream_of(run: Path) -> str:
+    """Workspace-relative upstream path, or "" for none / unfilled."""
+    value = identity_field(run, "Upstream")
+    if not value or value.lower() in ("none", "-", "n/a") or "<" in value:
+        return ""
+    return value.removeprefix("./")
+
+
+def all_terminal_folders(spec: dict) -> list[str]:
+    seen: list[str] = []
+    for p in spec.get("pipelines", {}).values():
+        seen += [t for t in p.get("terminal_folders", []) if t not in seen]
+    return seen
 
 
 def runs() -> list[Path]:
@@ -171,7 +222,11 @@ def stages_of(run: Path) -> list[str]:
 
 def check_walk(r: Results) -> None:
     """Entry points exist, and the root route table points at real files."""
-    for ep in r.spec["entrypoints"]:
+    entrypoints = list(r.spec["entrypoints"])
+    for name in r.spec.get("pipelines", {}):
+        tdir = rel(template_dir(r.spec, name))
+        entrypoints += [f"{tdir}/CLAUDE.md", f"{tdir}/CONTEXT.md"]
+    for ep in entrypoints:
         if (ROOT / ep).exists():
             r.ok("walk.entrypoint-missing")
         else:
@@ -216,9 +271,67 @@ def check_shared_references(r: Results) -> None:
                       scope=rel(md.parent), file=rel(md), line=find_line(text, token))
 
 
-def check_run_shape(r: Results, run: Path, tmpl_stages: list[str]) -> None:
+def check_templates(r: Results) -> None:
+    """Every template folder is a registered pipeline, and its running-order table is complete."""
+    registered = r.spec.get("pipelines", {})
+    folders = {p.name: p for p in template_folders(r.spec)}
+    for name, tdir in folders.items():
+        if name not in registered:
+            r.add("pipeline.unregistered",
+                  f"_templates/{name} has no entry under `pipelines` in _eval/checks.json",
+                  scope=f"pipeline {name}", file=rel(tdir),
+                  detail="Register its canonical_outputs, optional_stages, terminal_folders and "
+                         "behaviour_stages. See AUTHORING.md.")
+    for name in registered:
+        if name not in folders:
+            r.add("pipeline.unregistered",
+                  f"checks.json registers pipeline {name}, but {rel(template_dir(r.spec, name))} does not exist",
+                  scope=f"pipeline {name}", file="_eval/checks.json")
+            continue
+        check_running_order(r, name)
+
+
+def check_running_order(r: Results, name: str) -> None:
+    """The template's CONTEXT.md table gives every stage a type; optional rows match checks.json."""
+    tdir = template_dir(r.spec, name)
+    path = tdir / "CONTEXT.md"
+    text = read(path)
+    scope = f"pipeline {name}"
+    typed: dict[str, str] = {}
+    for line in text.splitlines():
+        cells = [c.strip().strip("`") for c in line.split("|")]
+        stage = next((c for c in cells if STAGE_RE.match(c)), None)
+        kind = next((c for c in cells if c in TYPES), None)
+        if stage and kind and stage not in typed:
+            typed[stage] = kind
+    stages = template_stages(r.spec, name)
+    for stage in stages:
+        if stage in typed:
+            r.ok("pipeline.running-order")
+        else:
+            r.add("pipeline.running-order",
+                  f"{stage} has no row with a type (core / live / optional) in the running-order table",
+                  scope=scope, file=rel(path),
+                  detail="`work` reads the running order to choose the next step. A stage missing "
+                         "from it is never proposed.")
+    for stage in typed:
+        if stage not in stages:
+            r.add("pipeline.running-order",
+                  f"running-order table lists {stage}, which is not a stage folder in this template",
+                  scope=scope, file=rel(path), line=find_line(text, stage))
+    declared = set(pipeline_spec(r.spec, name).get("optional_stages", []))
+    tabled = {s for s, k in typed.items() if k == "optional"}
+    if declared != tabled:
+        r.add("pipeline.running-order",
+              f"optional stages disagree — table: {sorted(tabled)}, checks.json: {sorted(declared)}",
+              scope=scope, file=rel(path))
+    else:
+        r.ok("pipeline.running-order")
+
+
+def check_run_shape(r: Results, run: Path, tmpl_stages: list[str], pipeline: str) -> None:
     present = stages_of(run)
-    optional = set(r.spec["optional_stages"])
+    optional = set(pipeline_spec(r.spec, pipeline).get("optional_stages", []))
     for stage in tmpl_stages:
         if stage in present:
             r.ok("run.stage-missing")
@@ -231,7 +344,7 @@ def check_run_shape(r: Results, run: Path, tmpl_stages: list[str]) -> None:
     for stage in present:
         if stage not in tmpl_stages:
             r.add("run.extra-stage",
-                  f"stage {stage} exists in this run but not in _template — method and instance have diverged",
+                  f"stage {stage} exists in this run but not in _templates/{pipeline} — method and instance have diverged",
                   scope=run.name, file=rel(run / stage))
 
     for folder in [run] + [run / s for s in present]:
@@ -258,6 +371,30 @@ def check_identity(r: Results, run: Path) -> None:
                   scope=run.name, file=rel(path), line=find_line(text, token))
     if not hit:
         r.ok("identity.placeholder")
+
+    pipeline = pipeline_of(run, r.spec)
+    if pipeline in r.spec.get("pipelines", {}):
+        r.ok("identity.pipeline-unknown")
+    else:
+        r.add("identity.pipeline-unknown",
+              f"Pipeline: {pipeline} — no such pipeline in _templates/ and checks.json",
+              scope=run.name, file=rel(path), line=find_line(text, "Pipeline:"))
+
+    upstream = upstream_of(run)
+    if upstream:
+        target = ROOT / upstream
+        up_run = ROOT / upstream.split("/")[0]
+        if target.is_file():
+            r.ok("identity.upstream-missing")
+        elif up_run.is_dir() and up_run != run:
+            r.add("identity.upstream-not-run",
+                  f"Upstream {upstream} does not exist yet — that stage has not run",
+                  scope=run.name, file=rel(path), line=find_line(text, "Upstream:"))
+        else:
+            r.add("identity.upstream-missing",
+                  f"Upstream {upstream} does not resolve — no such run or file",
+                  scope=run.name, file=rel(path), line=find_line(text, "Upstream:"),
+                  detail="Upstream is workspace-relative, e.g. `03-checkout-release/04_prd/output/prd.md`.")
 
     heading = r.spec["empty_promise_heading"]
     secs = sections(text)
@@ -308,8 +445,15 @@ def check_pipeline_table(r: Results, run: Path, canonical: dict) -> None:
 
 
 def check_stage_contract(r: Results, run: Path, stage: str, canonical: dict,
-                         tmpl_stages: list[str]) -> None:
-    scope = f"{run.name} / {stage}"
+                         tmpl_stages: list[str], base: Path | None = None) -> None:
+    """
+    `base` is where the contract's relative paths resolve from. A run sits at the workspace root, so
+    for a run it is the run itself. A template sits one level deeper, in _templates/, but its
+    contracts are written for the place they will be copied to — so it is checked as if it were a
+    run at the root.
+    """
+    base = base or run
+    scope = f"{run.name} / {stage}" if base == run else f"_templates/{run.name} / {stage}"
     path = run / stage / "CONTEXT.md"
     text = read(path)
     if not text:
@@ -348,7 +492,9 @@ def check_stage_contract(r: Results, run: Path, stage: str, canonical: dict,
             continue
         if not token.startswith(("../", "_shared/")):
             continue
-        target = (run / stage / token).resolve()
+        target = (base / stage / token).resolve()
+        if base != run and target.is_relative_to(base.resolve()):
+            target = run / target.relative_to(base.resolve())  # inside the template itself
         if target.exists():
             r.ok("contract.input-unresolved")
             continue
@@ -357,7 +503,7 @@ def check_stage_contract(r: Results, run: Path, stage: str, canonical: dict,
         if m:
             if m.group(1) not in tmpl_stages:
                 r.add("contract.input-stage-missing",
-                      f"input names stage {m.group(1)}, which is not a stage in _template",
+                      f"input names stage {m.group(1)}, which is not a stage in this pipeline's template",
                       scope=scope, file=rel(path), line=find_line(text, token))
             elif (run / m.group(1)).exists():
                 r.add("contract.upstream-not-run",
@@ -431,9 +577,9 @@ def check_stage_contract(r: Results, run: Path, stage: str, canonical: dict,
                          "needs updating.")
 
 
-def check_drift(r: Results, run: Path, stage: str) -> None:
+def check_drift(r: Results, run: Path, stage: str, pipeline: str) -> None:
     live = run / stage / "CONTEXT.md"
-    tmpl = ROOT / "_template" / stage / "CONTEXT.md"
+    tmpl = template_dir(r.spec, pipeline) / stage / "CONTEXT.md"
     if not (live.exists() and tmpl.exists()):
         return
     a, b = read(live), read(tmpl)
@@ -444,9 +590,9 @@ def check_drift(r: Results, run: Path, stage: str) -> None:
     added = len([l for l in la if l not in lb])
     removed = len([l for l in lb if l not in la])
     r.add("drift.template",
-          f"stage contract differs from _template (+{added} / -{removed} lines)",
+          f"stage contract differs from _templates/{pipeline} (+{added} / -{removed} lines)",
           scope=f"{run.name} / {stage}", file=rel(live),
-          detail="The workspace rule is: change the method in _template, never in a live run. "
+          detail="The workspace rule is: change the method in the template, never in a live run. "
                  "Port the change back, or accept it here.")
 
 
@@ -477,7 +623,7 @@ def check_order(r: Results, run: Path, stage: str, canonical: dict) -> None:
 
 
 def check_terminals(r: Results) -> None:
-    for name in r.spec["terminal_folders"]:
+    for name in all_terminal_folders(r.spec):
         folder = ROOT / name
         if not folder.is_dir():
             r.add("run.stage-missing", f"terminal folder missing: {name}",
@@ -506,27 +652,151 @@ def check_engine_manifest(r: Results) -> None:
         r.ok("engine.edited")
 
 
-def run_structure(r: Results) -> None:
-    canonical = r.spec["canonical_outputs"]
-    tmpl_stages = template_stages()
+# ───────────────────────────────────────────────────────────── lineage
+
+UPSTREAM_OUTPUT_RE = re.compile(r"^\.\./(\d{2}_[a-z0-9-]+)/output/([A-Za-z0-9_.-]+\.[a-z]+)$")
+MTIME_SLACK = 2.0  # seconds; a checkout writes files in some order, so near-ties are not evidence
+
+
+def file_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+
+
+def output_files(stage_dir: Path) -> list[Path]:
+    out = stage_dir / "output"
+    if not out.is_dir():
+        return []
+    return sorted(p for p in out.rglob("*")
+                  if p.is_file() and p.name not in (".DS_Store", ".gitkeep"))
+
+
+def stage_inputs(run: Path, stage: str) -> list[Path]:
+    """
+    The working files a stage output was built from: the same-run upstream outputs its contract
+    names, plus the run's Upstream file when the contract's Inputs mention it.
+    """
+    text = read(run / stage / "CONTEXT.md")
+    body = next((b for h, (_, b) in sections(text).items() if h.lower().startswith("inputs")), "")
+    named, _ = split_inputs(body)
+    found = []
+    for token in named:
+        if UPSTREAM_OUTPUT_RE.match(token):
+            p = (run / stage / token).resolve()
+            if p.is_file():
+                found.append(p)
+    upstream = upstream_of(run)
+    if upstream and re.search(r"\bupstream\b", body, re.I) and (ROOT / upstream).is_file():
+        found.append((ROOT / upstream).resolve())
+    return found
+
+
+def matches_accept(key: str, accept: list[str]) -> bool:
+    for a in accept:
+        a = a.strip("/")
+        if a and (key == a or key.startswith(a + "/")):
+            return True
+    return False
+
+
+def check_lineage(r: Results, accept: list[str]) -> None:
+    """
+    Flag a stage output whose inputs changed after it was built.
+
+    The ledger (checks.json `lineage_file`) records, per stage output, a hash of the output and of
+    every input as they were when the output was first seen. Hashes, not timestamps, because a git
+    checkout resets every timestamp. While the output is unchanged, any input whose hash moved makes
+    the output stale. Re-running the stage or editing its output re-baselines it; so does
+    `./eval --accept <run>[/<stage>]` once a person has checked it still holds.
+
+    First sight has no recorded history, so it falls back to timestamps once: an input newer than
+    the output is recorded as unknown, and stays stale until the output changes or is accepted.
+    """
+    ledger_path = ROOT / r.spec.get("lineage_file", "_eval/lineage.json")
+    try:
+        ledger = json.loads(read(ledger_path) or "{}")
+    except json.JSONDecodeError:
+        ledger = {}
+    entries: dict = ledger.get("entries", {})
+    before = json.dumps(entries, sort_keys=True)
+    live_keys = set()
+
+    for run in runs():
+        for stage in stages_of(run):
+            outs = output_files(run / stage)
+            if not outs:
+                continue
+            key = f"{run.name}/{stage}"
+            live_keys.add(key)
+            out_hash = hashlib.sha256("".join(file_hash(p) for p in outs).encode()).hexdigest()[:16]
+            inputs = {rel(p): file_hash(p) for p in stage_inputs(run, stage)}
+            entry = entries.get(key)
+
+            if entry is None or entry.get("output") != out_hash or matches_accept(key, accept):
+                recorded = dict(inputs)
+                if entry is None and not matches_accept(key, accept):
+                    oldest_out = min(p.stat().st_mtime for p in outs)
+                    for name in inputs:
+                        if (ROOT / name).stat().st_mtime > oldest_out + MTIME_SLACK:
+                            recorded[name] = "?"  # newer than the output on first sight
+                entries[key] = {"output": out_hash, "inputs": recorded}
+                entry = entries[key]
+
+            stale = []
+            for name, h in inputs.items():
+                was = entry["inputs"].get(name)
+                if was is None:
+                    entry["inputs"][name] = h  # input appeared after the output; nothing to compare
+                elif was != h:
+                    stale.append(name)
+            if stale:
+                r.add("lineage.stale",
+                      f"{stage} output was built on an older version of {', '.join(stale)}",
+                      scope=run.name, file=rel(run / stage / "output"),
+                      detail="Re-run the stage, or edit its output to match. If you have checked "
+                             f"it still holds: ./eval --accept {key}")
+            else:
+                r.ok("lineage.stale")
+
+    for gone in set(entries) - live_keys:
+        del entries[gone]
+    if json.dumps(entries, sort_keys=True) != before and (entries or ledger_path.exists()):
+        ledger_path.write_text(json.dumps({"version": 1, "entries": entries},
+                                          indent=1, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def run_structure(r: Results, accept: list[str] | None = None) -> None:
     check_engine_manifest(r)
     check_walk(r)
     check_shared_references(r)
     check_terminals(r)
+    check_templates(r)
 
-    # the template itself is a run for contract purposes
-    targets = [ROOT / "_template"] + runs()
-    for run in targets:
-        is_template = run.name == "_template"
-        if not is_template:
-            check_run_shape(r, run, tmpl_stages)
-            check_identity(r, run)
+    # each template is checked as a run for contract purposes, resolved as if it sat at the root
+    for tdir in template_folders(r.spec):
+        name = tdir.name
+        if name not in r.spec.get("pipelines", {}):
+            continue
+        canonical = pipeline_spec(r.spec, name).get("canonical_outputs", {})
+        stages = template_stages(r.spec, name)
+        check_pipeline_table(r, tdir, canonical)
+        for stage in stages_of(tdir):
+            check_stage_contract(r, tdir, stage, canonical, stages, base=ROOT / name)
+
+    for run in runs():
+        pipeline = pipeline_of(run, r.spec)
+        check_identity(r, run)
+        if pipeline not in r.spec.get("pipelines", {}):
+            continue  # identity.pipeline-unknown already says why; nothing to compare against
+        canonical = pipeline_spec(r.spec, pipeline).get("canonical_outputs", {})
+        stages = template_stages(r.spec, pipeline)
+        check_run_shape(r, run, stages, pipeline)
         check_pipeline_table(r, run, canonical)
         for stage in stages_of(run):
-            check_stage_contract(r, run, stage, canonical, tmpl_stages)
-            if not is_template:
-                check_drift(r, run, stage)
-                check_order(r, run, stage, canonical)
+            check_stage_contract(r, run, stage, canonical, stages)
+            check_drift(r, run, stage, pipeline)
+            check_order(r, run, stage, canonical)
+
+    check_lineage(r, accept or [])
 
 
 # ───────────────────────────────────────────────────────────── behavioural layer
@@ -563,11 +833,23 @@ def case_dirs(spec: dict, only: list[str] | None = None) -> list[Path]:
     return found
 
 
+def case_pipeline(case: Path, spec: dict) -> str:
+    return pipeline_of(case / "run", spec)
+
+
+def case_stages(case: Path, spec: dict, requested: list[str]) -> list[str]:
+    """The stages to test for one case: those requested that its pipeline has, else its defaults."""
+    pipeline = case_pipeline(case, spec)
+    if requested:
+        return [s for s in requested if s in template_stages(spec, pipeline)]
+    return list(pipeline_spec(spec, pipeline).get("behaviour_stages", []))
+
+
 def build_scratch(stage: str, spec: dict, case: Path) -> Path:
     """Materialise a throwaway run containing the case identity and seeded upstream outputs."""
     if SCRATCH.exists():
         shutil.rmtree(SCRATCH)
-    shutil.copytree(ROOT / "_template", SCRATCH)
+    shutil.copytree(template_dir(spec, case_pipeline(case, spec)), SCRATCH)
     for name in ("CLAUDE.md", "CONTEXT.md"):
         src = case / "run" / name
         if src.exists():
@@ -653,7 +935,7 @@ def grade(rubric_md: str, produced: str, cli: str, timeout: int) -> tuple[list[d
         return [], f"unparseable grader JSON: {e}"
 
 
-def grade_stage(r: Results, stage: str, produced: str, scope: str, cli: str | None,
+def grade_stage(r: Results, pipeline: str, stage: str, produced: str, scope: str, cli: str | None,
                 grader: str, timeout: int, layer: str = "behaviour") -> None:
     """
     Route each rubric criterion to a grader.
@@ -664,9 +946,10 @@ def grade_stage(r: Results, stage: str, produced: str, scope: str, cli: str | No
       local  — local only; judgement criteria are reported ungraded rather than guessed at
       claude — everything to the strong model
     """
-    rubric = EVAL_DIR / "rubrics" / f"{stage}.md"
+    rubric = EVAL_DIR / "rubrics" / pipeline / f"{stage}.md"
+    rubric_rel = f"rubrics/{pipeline}/{stage}.md"
     if not rubric.exists():
-        r.add("behaviour.error", f"no rubric at rubrics/{stage}.md — output quality not graded",
+        r.add("behaviour.error", f"no rubric at {rubric_rel} — output quality not graded",
               layer=layer, scope=scope, severity="info")
         return
 
@@ -692,7 +975,7 @@ def grade_stage(r: Results, stage: str, produced: str, scope: str, cli: str | No
         for cid in strong_ids:
             r.add("behaviour.rubric-ungraded",
                   f"{cid} — judgement criterion, not graded locally",
-                  layer=layer, scope=scope, file=f"rubrics/{stage}.md",
+                  layer=layer, scope=scope, file=rubric_rel,
                   detail="Tag it {local} in the rubric if you think a small model can judge it, "
                          "or run ./eval all to have the strong model grade it.")
     elif strong_ids:
@@ -714,15 +997,16 @@ def grade_stage(r: Results, stage: str, produced: str, scope: str, cli: str | No
         elif verdict == "unknown":
             r.add("behaviour.rubric-ungraded",
                   f"{c.get('id', '?')} — {c.get('evidence', 'no verdict returned')}",
-                  layer=layer, scope=scope, file=f"rubrics/{stage}.md")
+                  layer=layer, scope=scope, file=rubric_rel)
         else:
             r.add("behaviour.rubric", f"{c.get('id', '?')} — {c.get('evidence', '')}",
-                  layer=layer, scope=scope, file=f"rubrics/{stage}.md",
+                  layer=layer, scope=scope, file=rubric_rel,
                   detail=f"graded by: {who}")
 
 
-def run_behaviour(r: Results, stages: list[str], do_grade: bool, timeout: int,
+def run_behaviour(r: Results, requested: list[str], do_grade: bool, timeout: int,
                   keep: bool, grader: str = "auto", cases: list[Path] | None = None) -> None:
+    """`requested` filters stages; empty means each case's pipeline's behaviour_stages."""
     cli = claude_cli()
     if not cli:
         r.add("behaviour.error",
@@ -732,18 +1016,19 @@ def run_behaviour(r: Results, stages: list[str], do_grade: bool, timeout: int,
                      "`./eval behaviour --manual` to print a run sheet you can work through by hand.")
         return
 
-    canonical = r.spec["canonical_outputs"]
     cases = cases if cases is not None else case_dirs(r.spec)
     if not cases:
         r.add("behaviour.error", "no eval cases found — check `case_roots` in _eval/checks.json",
               layer="behaviour", scope="workspace")
         return
-    for case, stage in ((c, s) for c in cases for s in stages):
+    pairs = [(c, s) for c in cases for s in case_stages(c, r.spec, requested)]
+    if not pairs:
+        r.add("behaviour.error", "no stage to test — no case's pipeline has the requested stages",
+              layer="behaviour", scope="workspace", severity="warn")
+    for case, stage in pairs:
         scope = f"{rel(case)} / {stage}"
-        if not (ROOT / "_template" / stage).is_dir():
-            r.add("behaviour.error", f"{stage} is not a stage in _template",
-                  layer="behaviour", scope=scope)
-            continue
+        pipeline = case_pipeline(case, r.spec)
+        canonical = pipeline_spec(r.spec, pipeline).get("canonical_outputs", {})
         build_scratch(stage, r.spec, case)
         contract = read(SCRATCH / stage / "CONTEXT.md")
         named, forbidden = split_inputs(
@@ -818,13 +1103,13 @@ def run_behaviour(r: Results, stages: list[str], do_grade: bool, timeout: int,
 
         # judgement — rubric
         if do_grade and produced_text.strip():
-            grade_stage(r, stage, produced_text, scope, cli, grader, timeout)
+            grade_stage(r, pipeline, stage, produced_text, scope, cli, grader, timeout)
 
     if SCRATCH.exists() and not keep:
         shutil.rmtree(SCRATCH)
 
 
-def run_legibility(r: Results, stages: list[str], keep: bool) -> None:
+def run_legibility(r: Results, requested: list[str], keep: bool) -> None:
     """
     Is each contract mechanically unambiguous? A small local model runs the stage; we check only
     whether it could find its inputs, honour its exclusions, and write the declared output.
@@ -843,19 +1128,20 @@ def run_legibility(r: Results, stages: list[str], keep: bool) -> None:
               layer="legibility", scope="workspace", severity="fail")
         return
 
-    canonical = r.spec["canonical_outputs"]
     cases = case_dirs(r.spec)
     if not cases:
         r.add("legibility.error", "no eval cases found — check `case_roots` in _eval/checks.json",
               layer="legibility", scope="workspace", severity="fail")
         return
-    case = cases[0]  # legibility tests the contract, not the thinking — one case is enough
-    for stage in stages:
-        scope = f"legibility / {stage}"
-        if not (ROOT / "_template" / stage).is_dir():
-            r.add("legibility.error", f"{stage} is not a stage in _template",
-                  layer="legibility", scope=scope, severity="fail")
-            continue
+    # legibility tests the contract, not the thinking — one case per pipeline is enough
+    first: dict[str, Path] = {}
+    for c in cases:
+        first.setdefault(case_pipeline(c, r.spec), c)
+    pairs = [(c, s) for c in first.values() for s in case_stages(c, r.spec, requested)]
+    for case, stage in pairs:
+        pipeline = case_pipeline(case, r.spec)
+        canonical = pipeline_spec(r.spec, pipeline).get("canonical_outputs", {})
+        scope = f"legibility / {pipeline} / {stage}"
 
         build_scratch(stage, r.spec, case)
         contract = read(SCRATCH / stage / "CONTEXT.md")
@@ -1007,20 +1293,22 @@ def doctor(spec: dict) -> int:
     return 0
 
 
-def manual_sheet(spec: dict, stages: list[str], cases: list[Path] | None = None) -> Path:
+def manual_sheet(spec: dict, requested: list[str], cases: list[Path] | None = None) -> Path:
     cases = cases if cases is not None else case_dirs(spec)
-    case = rel(cases[0]) if cases else "_eval/fixtures"
     lines = ["# Behavioural eval — manual run sheet", "",
              "The `claude` CLI was not available, so run these by hand.",
              "Fresh session per stage, always from the workspace root.", ""]
-    for stage in stages:
-        rubric = EVAL_DIR / "rubrics" / f"{stage}.md"
-        lines += [f"## {stage}", "",
-                  f"1. `cp -R _template _eval-scratch` then copy `{case}/run/CLAUDE.md` over it,",
+    for case_path, stage in ((c, s) for c in cases for s in case_stages(c, spec, requested)):
+        case = rel(case_path)
+        pipeline = case_pipeline(case_path, spec)
+        tdir = rel(template_dir(spec, pipeline))
+        outputs = pipeline_spec(spec, pipeline).get("canonical_outputs", {}).get(stage, [])
+        rubric = EVAL_DIR / "rubrics" / pipeline / f"{stage}.md"
+        lines += [f"## {pipeline} / {stage} — case `{case}`", "",
+                  f"1. `cp -R {tdir} _eval-scratch` then copy `{case}/run/CLAUDE.md` over it,",
                   f"   and seed upstream outputs from `{case}/seed/`.",
                   f"2. New session, from the root: `work _eval-scratch/{stage}`",
-                  f"3. Expect `_eval-scratch/{stage}/output/"
-                  f"{', '.join(spec['canonical_outputs'].get(stage, []))}`", ""]
+                  f"3. Expect `_eval-scratch/{stage}/output/{', '.join(outputs)}`", ""]
         if rubric.exists():
             lines += ["Grade against:", "", read(rubric), ""]
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -1301,18 +1589,19 @@ def summarise(r: Results, report: Path, previous: dict | None, duration: float) 
 
 # ───────────────────────────────────────────────────────────── main
 
-DEFAULT_BEHAVIOUR_STAGES = ["01_frame", "02_explore", "03_converge", "08_vision-horizon"]
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(
-        prog="eval", description="Evaluate the 12-month vision workspace.")
+        prog="eval", description="Evaluate the pipeline workspace.")
     ap.add_argument("layer", nargs="?", default="structure",
                     choices=["structure", "legibility", "behaviour", "all", "doctor"],
                     help="structure (free) · legibility (local model, free) · "
                          "behaviour (costs tokens) · all · doctor (check the local model)")
     ap.add_argument("--stage", action="append", default=[],
-                    help="stage to test, repeatable. Default: the four solo-test stages.")
+                    help="stage to test, repeatable. Default: each case's pipeline's "
+                         "behaviour_stages in checks.json.")
+    ap.add_argument("--accept", action="append", default=[], metavar="RUN[/STAGE]",
+                    help="structure: mark a stale output as checked — re-baseline its lineage. "
+                         "Repeatable. A run name accepts every stage in it.")
     ap.add_argument("--case", action="append", default=[],
                     help="behaviour: case to run (folder name or path), repeatable. "
                          "Default: every case under checks.json `case_roots`.")
@@ -1339,12 +1628,12 @@ def main() -> int:
 
     r = Results(spec)
     layers: list[str] = []
-    stages = args.stage or DEFAULT_BEHAVIOUR_STAGES
+    stages = args.stage  # empty: each case's pipeline decides
     t0 = time.time()
 
     if args.layer in ("structure", "all"):
         layers.append("structure")
-        run_structure(r)
+        run_structure(r, args.accept)
 
     if args.layer in ("legibility", "all"):
         layers.append("legibility")

@@ -1,5 +1,7 @@
 # Runbook
 
+This runbook covers the `discovery` pipeline. The PRD pipelines run from their own `CONTEXT.md`.
+
 The facilitator's guide. `README.md` covers how to open the workspace and type commands. This file
 covers how to run the process with people: the order, who is involved, and what goes wrong.
 
@@ -17,7 +19,7 @@ covers how to run the process with people: the order, who is involved, and what 
 |---|---|---|---|
 | 1 | Pick the problem | One sentence, plus a short slug (`expense-capture`). Check no existing run already covers it — if one does, work in that run | — |
 | 2 | Shared context *(first run only)* | Check `_shared/product-context.md`, `house-view.md` and `timeline.md` are filled and current. See README → Full setup | — |
-| 3 | Create the run | `new <slug>` | `NN-<slug>/CLAUDE.md` filled |
+| 3 | Create the run | `new discovery <slug>` | `NN-<slug>/CLAUDE.md` filled |
 | 4 | Setup | `work <run>/00_setup` — skippable for small or solo runs | `inventory.md` |
 | 5 | **Kickoff** | **Live meeting.** Name the owner of the 12-month view out loud | — |
 | 6 | Frame → Pressure-test | `work <run>` for each of `01`–`05`, one conversation per stage | `frame.md` … `pressure-test.md` |
@@ -217,7 +219,7 @@ feeds into stage `99`. Skipping them is a normal end state, not an unfinished ru
 
 **If your run folder does not have `09_report` or `10_prototype-handoff`** (it was created before
 these stages existed), ask Claude: *"Add the `09_report` and `10_prototype-handoff` stages from
-`_template` to `<run>`."*
+`_templates/discovery` to `<run>`."*
 
 ### `09_report`
 
@@ -314,14 +316,14 @@ deliverable.
 | Engineering wants to reopen the direction | A key assumption may be false | Find out which one. If it really is false, go back to `03`. If not, hold the line. |
 | `08` keeps slipping | It is treated as a write-up, not the deliverable | It is the deliverable. Cut polish in `04` instead. |
 | The output feels generic | `_shared/house-view.md` is thin | Fix that file, not the stage folders |
-| A stage's instructions feel wrong | They probably are | Rewrite them in `_template`, then run `./eval` to check nothing broke |
-| A stage answers its own questions | Claude is guessing instead of asking | Say "ask me, one question at a time". If it repeats, tighten that stage's `CONTEXT.md` in `_template` |
+| A stage's instructions feel wrong | They probably are | Rewrite them in `_templates/discovery`, then run `./eval` to check nothing broke |
+| A stage answers its own questions | Claude is guessing instead of asking | Say "ask me, one question at a time". If it repeats, tighten that stage's `CONTEXT.md` in `_templates/discovery` |
 
 ## Rules that do not change
 
 1. Load only what the stage names. Do not point Claude at the whole workspace.
 2. One home for each fact. If it is in `_shared`, point to it — do not copy it.
-3. Change `_template`, never a live run.
+3. Change `_templates/discovery`, never a live run.
 4. Every session ends with a saved file.
 5. No polished slide deck at the playback.
 6. Stage `08` is not optional.

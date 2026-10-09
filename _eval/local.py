@@ -273,7 +273,7 @@ TOOLS = [
             "content": {"type": "string"}}, "required": ["path", "content"]}}},
 ]
 
-AGENT_SYSTEM = """You are executing one stage of a product-discovery pipeline.
+AGENT_SYSTEM = """You are executing one stage of a folder-based pipeline.
 
 Your working directory is the workspace root. All paths you pass to tools are relative to it.
 

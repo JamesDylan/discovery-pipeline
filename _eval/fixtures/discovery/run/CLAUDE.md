@@ -1,12 +1,14 @@
 # Run: Unused Ticket Credits
 
-Eval fixture. Not a real run. `_eval/evaluate.py` copies this over a fresh `_template` copy to make
+Eval fixture. Not a real run. `_eval/evaluate.py` copies this over a fresh copy of its pipeline's template to make
 a throwaway run, then tests one stage against it.
 
 Deliberately not any live run's problem space: if the fixture shared a problem space with a live
 run, the eval would start grading the live run's thinking instead of the method.
 
 ## Identity
+- **Pipeline:** discovery
+- **Upstream:** none
 - **Problem space:** Corporate travellers cancel flights and generate airline credits that expire unused, and neither the traveller nor the travel manager can reliably see, value or spend them.
 - **Sphere of influence:** Post-booking value recovery in the booking product — what happens to money already spent once a trip changes.
 - **Pair:** Product — Fixture Product · Design — Fixture Design

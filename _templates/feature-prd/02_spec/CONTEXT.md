@@ -1,0 +1,25 @@
+# 02_spec — write the feature PRD
+
+One job: write the feature PRD from the decided behaviour. Assert nothing `01_behaviour` did not
+decide.
+
+## Inputs
+- Reference (every run): `../../_shared/operating-principles.md`
+- Reference (every run): `../../_shared/house-view.md`
+- Reference: `../../_shared/feature-prd-template.md`
+- Working (this run): `../00_intake/output/intake.md`
+- Working (this run): `../01_behaviour/output/behaviour.md`
+- Working (this run): `../CLAUDE.md` — run identity
+- **Do NOT load:** `../03_review/` onward.
+
+## Process
+1. Write in the shape `feature-prd-template.md` sets.
+2. Write each acceptance criterion as a test: given, when, then. One behaviour per criterion.
+3. Reference the upstream by section. Do not restate it.
+
+## Outputs
+- `feature-prd.md` → `output/` — the feature PRD
+
+## Human check
+Give one acceptance criterion to an engineer who has not seen the feature. If they cannot say how
+they would test it, rewrite it.

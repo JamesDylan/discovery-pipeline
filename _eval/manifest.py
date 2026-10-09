@@ -31,11 +31,12 @@ MANIFEST = "engine.manifest"
 OWNED = [
     "CLAUDE.md",
     "CONTEXT.md",
+    "AUTHORING.md",
     "README.md",
     "RUNBOOK.md",
     "eval",
     "pull-engine.sh",
-    "_template/",
+    "_templates/",
     "_eval/",
     "_shared/operating-principles.md",
     "_shared/report-design-system.md",
@@ -49,7 +50,7 @@ OWNED = [
 ]
 
 # Never part of the engine, even under an owned folder.
-EXCLUDE_PREFIXES = ["_eval/report/", "_eval/cases/"]
+EXCLUDE_PREFIXES = ["_eval/report/", "_eval/cases/", "_eval/lineage.json"]
 EXCLUDE_NAMES = {".DS_Store", "__pycache__"}
 
 # Starter files: the instance fills these in and owns them from then on.
@@ -63,6 +64,10 @@ SEED = [
     "_shared/prototype-target.md",
     "_shared/accelerator-brief.md",
     "_shared/timeline.md",
+    "_shared/prd-principles.md",
+    "_shared/prd-template.md",
+    "_shared/feature-prd-template.md",
+    "_shared/delivery-target.md",
 ]
 
 
@@ -132,6 +137,18 @@ def check(root: Path) -> list[tuple[str, str]]:
     return problems
 
 
+def prune_empty(root: Path, folder: Path) -> None:
+    """
+    Remove folders a deletion left empty, walking up to the root. A folder that holds only empty
+    folders or OS cruft (e.g. a stage's untracked `output/`) counts as empty; any real file keeps it.
+    """
+    while folder != root and folder.is_dir():
+        if any(p.is_file() and p.name not in EXCLUDE_NAMES for p in folder.rglob("*")):
+            return
+        shutil.rmtree(folder)
+        folder = folder.parent
+
+
 def install(src: Path, dst: Path, force: bool = False) -> int:
     if not (src / MANIFEST).is_file():
         print(f"no {MANIFEST} in {src} — is that an engine tag?", file=sys.stderr)
@@ -166,6 +183,7 @@ def install(src: Path, dst: Path, force: bool = False) -> int:
         if rel not in new_owned and (dst / rel).is_file():
             (dst / rel).unlink()
             removed += 1
+            prune_empty(dst, (dst / rel).parent)
 
     for rel in seed:
         d = dst / rel

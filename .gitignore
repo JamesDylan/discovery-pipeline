@@ -3,3 +3,4 @@
 _eval/report/
 _eval-scratch/
 __pycache__/
+_eval/lineage.json

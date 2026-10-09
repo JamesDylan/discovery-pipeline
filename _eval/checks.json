@@ -1,61 +1,161 @@
 {
   "_comment": "Edit this file to change what the eval enforces. No code changes needed. Severities: fail | warn | info.",
-
-  "required_sections": ["Inputs", "Process", "Outputs", "Human check"],
-
-  "canonical_outputs": {
-    "00_setup":                  ["inventory.md"],
-    "01_frame":                  ["frame.md"],
-    "02_explore":                ["options.md"],
-    "03_converge":               ["direction.md"],
-    "04_make-tangible":          ["artefact-notes.md"],
-    "05_pressure-test":          ["pressure-test.md"],
-    "06_playback":               ["playback.md"],
-    "07_engineering-refinement": ["solution-scope.md"],
-    "08_vision-horizon":         ["vision-horizon.md"],
-    "09_report":                 ["content.yaml", "gaps.md", "vision-report.html"],
-    "10_prototype-handoff":      ["prototype-briefs/<slug>.md", "HANDOFF.md"]
+  "required_sections": [
+    "Inputs",
+    "Process",
+    "Outputs",
+    "Human check"
+  ],
+  "templates_dir": "_templates",
+  "default_pipeline": "discovery",
+  "_pipelines_comment": "One entry per folder in _templates/. canonical_outputs is the one true map of stage -> output filename for that pipeline. optional_stages must match the 'optional' rows of the template's running-order table. behaviour_stages are the stages ./eval behaviour and ./eval legibility test by default. Rubrics live in _eval/rubrics/<pipeline>/<stage>.md.",
+  "pipelines": {
+    "discovery": {
+      "canonical_outputs": {
+        "00_setup": [
+          "inventory.md"
+        ],
+        "01_frame": [
+          "frame.md"
+        ],
+        "02_explore": [
+          "options.md"
+        ],
+        "03_converge": [
+          "direction.md"
+        ],
+        "04_make-tangible": [
+          "artefact-notes.md"
+        ],
+        "05_pressure-test": [
+          "pressure-test.md"
+        ],
+        "06_playback": [
+          "playback.md"
+        ],
+        "07_engineering-refinement": [
+          "solution-scope.md"
+        ],
+        "08_vision-horizon": [
+          "vision-horizon.md"
+        ],
+        "09_report": [
+          "content.yaml",
+          "gaps.md",
+          "vision-report.html"
+        ],
+        "10_prototype-handoff": [
+          "prototype-briefs/<slug>.md",
+          "HANDOFF.md"
+        ]
+      },
+      "optional_stages": [
+        "09_report",
+        "10_prototype-handoff"
+      ],
+      "terminal_folders": [
+        "99-vision-synthesis",
+        "100-report",
+        "101-prototype-handoff"
+      ],
+      "behaviour_stages": [
+        "01_frame",
+        "02_explore",
+        "03_converge",
+        "08_vision-horizon"
+      ]
+    },
+    "release-prd": {
+      "canonical_outputs": {
+        "00_intake": [
+          "sources.md"
+        ],
+        "01_synthesis": [
+          "synthesis.md"
+        ],
+        "02_problem": [
+          "problem.md"
+        ],
+        "03_scope": [
+          "scope.md"
+        ],
+        "04_prd": [
+          "prd.md"
+        ],
+        "05_review": [
+          "review.md"
+        ]
+      },
+      "optional_stages": [],
+      "terminal_folders": [],
+      "behaviour_stages": []
+    },
+    "feature-prd": {
+      "canonical_outputs": {
+        "00_intake": [
+          "intake.md"
+        ],
+        "01_behaviour": [
+          "behaviour.md"
+        ],
+        "02_spec": [
+          "feature-prd.md"
+        ],
+        "03_review": [
+          "review.md"
+        ],
+        "04_delivery-handoff": [
+          "handoff.md"
+        ]
+      },
+      "optional_stages": [
+        "04_delivery-handoff"
+      ],
+      "terminal_folders": [],
+      "behaviour_stages": []
+    }
   },
-
-  "optional_stages": ["09_report", "10_prototype-handoff"],
-
   "entrypoints": [
     "CLAUDE.md",
     "CONTEXT.md",
+    "AUTHORING.md",
     "RUNBOOK.md",
     "README.md",
     "_shared/CONTEXT.md",
     "_shared/operating-principles.md",
-    "_shared/house-view.md",
-    "_template/CLAUDE.md",
-    "_template/CONTEXT.md"
+    "_shared/house-view.md"
   ],
-
+  "_entrypoints_comment": "Each pipeline's _templates/<pipeline>/CLAUDE.md and CONTEXT.md are checked automatically.",
   "always_loaded": [
     "_shared/operating-principles.md",
     "_shared/house-view.md"
   ],
-
-  "case_roots": ["_eval/fixtures", "_eval/cases"],
-  "_case_roots_comment": "Behaviour cases. Each entry is a case (has run/ and/or seed/) or a folder of cases. Engine: synthetic fixtures. Instance: frozen real runs in _eval/cases/.",
-
-  "terminal_folders": ["99-vision-synthesis", "100-report", "101-prototype-handoff"],
-
+  "case_roots": [
+    "_eval/fixtures",
+    "_eval/cases"
+  ],
+  "_case_roots_comment": "Behaviour cases. Each entry is a case (has run/ and/or seed/) or a folder of cases. Engine: synthetic fixtures. Instance: frozen real runs in _eval/cases/. A case's pipeline is the Pipeline line in its run/CLAUDE.md.",
+  "lineage_file": "_eval/lineage.json",
+  "_lineage_comment": "Instance-owned record of which input versions each stage output was built from. Commit it. ./eval writes it; ./eval --accept <run>[/<stage>] marks a stale output as checked.",
   "placeholder_tokens": [
     "<fill",
     "<one line>",
     "<name",
     "<PROBLEM SPACE NAME>",
+    "<RELEASE NAME>",
+    "<FEATURE NAME>",
     "<which",
     "<the specific",
     "TODO",
     "TBC"
   ],
-
   "empty_promise_heading": "Run-specific notes by stage",
-
-  "external_path_prefixes": ["~", "Tools/", "/", "http"],
-
+  "external_path_prefixes": [
+    "~",
+    "Tools/",
+    "/",
+    "http"
+  ],
   "local": {
     "_comment": "Ollama. Run `./eval doctor` to detect and fill model/grader_model.",
     "base_url": "http://localhost:11434",
@@ -65,50 +165,60 @@
     "temperature": 0,
     "max_turns": 24,
     "timeout": 300,
-    "prefer": ["qwen2.5:32b", "qwen2.5:14b", "qwen2.5:7b", "qwen2.5", "qwen3", "llama3.1"]
+    "prefer": [
+      "qwen2.5:32b",
+      "qwen2.5:14b",
+      "qwen2.5:7b",
+      "qwen2.5",
+      "qwen3",
+      "llama3.1"
+    ]
   },
-
   "severities": {
-    "walk.entrypoint-missing":        "fail",
-    "walk.route-target-missing":      "fail",
-    "contract.missing-section":       "fail",
-    "contract.input-unresolved":      "fail",
-    "contract.input-stage-missing":   "fail",
-    "contract.upstream-not-run":      "info",
-    "contract.no-output-declared":    "fail",
-    "contract.output-mismatch":       "fail",
-    "contract.table-mismatch":        "fail",
-    "contract.downstream-disagree":   "fail",
+    "walk.entrypoint-missing": "fail",
+    "walk.route-target-missing": "fail",
+    "contract.missing-section": "fail",
+    "contract.input-unresolved": "fail",
+    "contract.input-stage-missing": "fail",
+    "contract.upstream-not-run": "info",
+    "contract.no-output-declared": "fail",
+    "contract.output-mismatch": "fail",
+    "contract.table-mismatch": "fail",
+    "contract.downstream-disagree": "fail",
     "contract.always-loaded-missing": "warn",
-    "contract.do-not-load-conflict":  "fail",
-    "contract.external-path":         "info",
-    "run.stage-missing":              "fail",
-    "run.optional-stage-absent":      "info",
-    "run.extra-stage":                "warn",
-    "identity.placeholder":           "fail",
-    "identity.empty-promise":         "fail",
-    "drift.template":                 "warn",
-    "engine.edited":                  "fail",
-    "shared.dangling-reference":      "fail",
-    "order.out-of-sequence":          "warn",
-    "behaviour.output-missing":       "fail",
-    "behaviour.output-empty":         "fail",
-    "behaviour.forbidden-read":       "fail",
-    "behaviour.input-not-read":       "warn",
-    "behaviour.rubric":               "fail",
-    "behaviour.error":                "fail",
-    "behaviour.rubric-ungraded":      "info",
-
-    "legibility.output-missing":      "warn",
-    "legibility.output-thin":         "warn",
-    "legibility.forbidden-read":      "warn",
-    "legibility.input-not-read":      "info",
-    "legibility.wrong-path":          "warn",
-    "legibility.stalled":             "warn",
-    "legibility.error":               "info",
-    "legibility.ok":                  "info"
+    "contract.do-not-load-conflict": "fail",
+    "contract.external-path": "info",
+    "run.stage-missing": "fail",
+    "run.optional-stage-absent": "info",
+    "run.extra-stage": "warn",
+    "identity.placeholder": "fail",
+    "identity.empty-promise": "fail",
+    "identity.pipeline-unknown": "fail",
+    "identity.upstream-missing": "fail",
+    "identity.upstream-not-run": "info",
+    "drift.template": "warn",
+    "engine.edited": "fail",
+    "pipeline.unregistered": "fail",
+    "pipeline.running-order": "fail",
+    "shared.dangling-reference": "fail",
+    "order.out-of-sequence": "warn",
+    "lineage.stale": "warn",
+    "behaviour.output-missing": "fail",
+    "behaviour.output-empty": "fail",
+    "behaviour.forbidden-read": "fail",
+    "behaviour.input-not-read": "warn",
+    "behaviour.rubric": "fail",
+    "behaviour.error": "fail",
+    "behaviour.rubric-ungraded": "info",
+    "legibility.output-missing": "warn",
+    "legibility.output-thin": "warn",
+    "legibility.forbidden-read": "warn",
+    "legibility.input-not-read": "info",
+    "legibility.wrong-path": "warn",
+    "legibility.stalled": "warn",
+    "legibility.error": "info",
+    "legibility.ok": "info"
   },
-
   "ignore": {
     "_comment": "Check IDs listed here are recorded but never fail the exit code. Use for known, accepted deviations.",
     "check_ids": [],

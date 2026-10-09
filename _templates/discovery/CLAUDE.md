@@ -3,6 +3,8 @@
 Pipeline workspace. Fill this header when instantiating the run.
 
 ## Identity
+- **Pipeline:** discovery
+- **Upstream:** none
 - **Problem space:** <one line>
 - **Sphere of influence:** <which part of the product this run owns a point of view over — defines the boundary of the 08 vision claim>
 - **Pair:** Product — <name> · Design — <name>
@@ -24,6 +26,9 @@ Pipeline workspace. Fill this header when instantiating the run.
 **`05_pressure-test` — the mess that matters here.** <the specific edge cases and exposures for this problem space>
 
 ## Route
+`Pipeline` names the method this run copies (`_templates/discovery/`). `Upstream` is a
+workspace-relative path to another run's output that this run builds on, or `none`.
+
 Read `CONTEXT.md` for the pipeline and the stage table. Then open the stage folder you are working
 and read its `CONTEXT.md`. Load `../_shared/operating-principles.md` and `../_shared/house-view.md`
 always; load nothing else unless the stage contract's Inputs list names it.

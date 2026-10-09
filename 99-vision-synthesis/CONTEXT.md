@@ -7,7 +7,7 @@ One job: produce a 12-month product vision that no run produced alone.
 - Reference (every run): `../_shared/house-view.md`
 - Reference: `../_shared/vision-principles.md`
 - Working: `../NN-<slug>/08_vision-horizon/output/vision-horizon.md` — one per completed run.
-  Find them with `ls [0-9][0-9]-*/08_vision-horizon/output/vision-horizon.md`
+  Find them with `ls [0-9]*-*/08_vision-horizon/output/vision-horizon.md` (only discovery runs have an `08`)
 - Reference: `../_shared/product-context.md` — the product, and the key partner for the readout
 - Reference: `../_shared/decision-log.md`
 - **Do NOT load:** the runs' intermediate stages. If the `08` outputs don't carry the argument,

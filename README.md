@@ -1,13 +1,15 @@
-# 12-Month Vision — How This Works
+# Pipeline Workspace — How This Works
 
-Each folder is one step of the work. Each step folder holds its own instructions (`CONTEXT.md`) and
+A workspace for repeatable product processes. Each process is a **pipeline**: `discovery` (a problem
+space to a 12-month vision), `release-prd` and `feature-prd`. Each folder is one step of the work. Each step folder holds its own instructions (`CONTEXT.md`) and
 an `output/` folder. Open the workspace in Claude, name the step, and Claude does that step only —
 using only the files that step lists.
 
 No tool to learn. No special software. Folders hold the order, files hold the state.
 
-**Part A** gets you running in five minutes. **Part B** explains what the process is for and why it
-works. `RUNBOOK.md` is the facilitator's guide: what each stage is for and what goes wrong.
+**Part A** gets you running in five minutes. **Part B** explains the discovery pipeline: what it is
+for and why it works. `RUNBOOK.md` is the facilitator's guide for discovery. `AUTHORING.md` is the
+rulebook for designing a new pipeline.
 
 ---
 ---
@@ -18,27 +20,43 @@ works. `RUNBOOK.md` is the facilitator's guide: what each stage is for and what 
 
 1. **Open the workspace root** (the folder this README is in) in Claude Code — desktop app, IDE,
    or `claude` in a terminal. Always the root, never a subfolder.
-2. **Type:** `new expense-capture`
-   Claude copies `_template` to the next free number (e.g. `05-expense-capture`) and asks you the
-   run's identity questions, one at a time.
+2. **Type:** `new discovery expense-capture` (or `new release-prd …`, `new feature-prd …`)
+   Claude copies `_templates/discovery` to the next free number (e.g. `05-expense-capture`) and asks
+   you the run's identity questions, one at a time.
 3. **Start a new conversation and type:** `work expense-capture`
    Claude checks what's done, proposes the next stage, runs it, and stops at the human check.
 4. Repeat step 3 — one stage per conversation. (`/clear` starts a fresh one.)
 
-Prefer doing it by hand? Copy `_template`, rename it `NN-your-problem`, fill its `CLAUDE.md`, then
-go to step 3.
+Prefer doing it by hand? Copy `_templates/<pipeline>`, rename it `NN-your-problem`, fill its
+`CLAUDE.md`, then go to step 3.
 
 > **Why the number?** The eval and the status check find runs by their number prefix. It is only an
-> ID — runs do not depend on each other and can run in any order.
+> ID. Runs of every pipeline share one number sequence.
+
+## Pipelines and how runs connect
+
+| Pipeline | Use it for |
+|---|---|
+| `discovery` | A problem space: frame, explore, decide, prototype, and a 12-month vision |
+| `release-prd` | The PRD for a key release. Short: it names its features, it does not specify them |
+| `feature-prd` | One feature, specified for agentic delivery. Anyone can start one at any time |
+
+A run can build on one other run's output: its `Upstream:` line. A feature PRD usually points at a
+release PRD's `04_prd/output/prd.md`. When that file changes, `./eval` flags every feature PRD built
+on the old version (`lineage.stale`). Re-run the stage, or check it and type
+`./eval --accept <run>/<stage>`.
+
+`release-prd` and `feature-prd` are skeletons: the stages and checks are set, the processes are first
+drafts.
 
 ## Commands
 
 | Type | What happens |
 |---|---|
-| `new <name>` | Creates the run folder and fills its identity with you. Stops there |
+| `new <pipeline> <name>` | Creates the run folder and fills its identity with you. Stops there |
 | `work <run>` | **Guided.** Proposes the next stage, runs it once you confirm, stops at the human check |
 | `work <run>/<stage>` | **Manual.** Runs that one stage. Use it to skip ahead, go back, or re-run |
-| `status` or `status <run>` | Lists which stages are done and what's next. Changes nothing |
+| `status` or `status <run>` | Lists runs by pipeline, which stages are done and what's next. Changes nothing |
 
 `<run>` can be part of the name — `work churn` finds `04-reduce-churn`. Close wording works too
 ("what's next on churn?"). The exact behaviour is defined in `CLAUDE.md` → Commands.
@@ -79,11 +97,14 @@ Claude walks the setup questionnaire with you, updates `_shared/product-context.
 assets you can and cannot open. It will stop you if you start solving the problem — that boundary
 is the point. Skippable for small or solo runs.
 
-**4. Kickoff** — a live meeting before `01_frame`. See `RUNBOOK.md`.
+**4. Kickoff** (discovery only) — a live meeting before `01_frame`. See `RUNBOOK.md`.
+
+For the PRD pipelines, also fill `_shared/prd-principles.md`, `prd-template.md`,
+`feature-prd-template.md` and, before any delivery handoff, `delivery-target.md`.
 
 ## Checking the folders still work (eval)
 
-Run the eval when you **change the method** — a `CONTEXT.md` in `_template/`, a `_shared/` file, or
+Run the eval when you **change the method** — a `CONTEXT.md` in `_templates/`, a `_shared/` file, or
 the folder structure. You do not need it to run a normal stage.
 
 | When | Run | Cost |
@@ -118,11 +139,12 @@ engine-owned file.
 ```
 CLAUDE.md        the map Claude reads first, and the command definitions
 README.md        this file
-RUNBOOK.md       facilitator's guide: roles, each stage in detail, what goes wrong
+AUTHORING.md     the rules for designing a pipeline
+RUNBOOK.md       facilitator's guide for discovery: roles, each stage in detail, what goes wrong
 _shared/         background every stage uses. Write once, every run improves
-_template/       the blank method. Copy it to start a run
-NN-<run>/        one problem area going through the stages
-99-, 100-, 101-  combine runs into one vision; optionally render it or brief the prototyping tool
+_templates/      the blank methods, one folder per pipeline. Copy one to start a run
+NN-<run>/        one run going through its pipeline's stages
+99-, 100-, 101-  discovery: combine runs into one vision; optionally render it or brief the prototyping tool
 _eval/, eval     the self-check
 engine.manifest, pull-engine.sh   which files are the method, and how to update them
 ```
@@ -133,7 +155,7 @@ check) and an `output/` folder. A file in `output/` means that stage is done.
 ---
 ---
 
-# Part B — Understand it
+# Part B — Understand the discovery pipeline
 
 ## 1. What this is
 
@@ -263,7 +285,7 @@ them to disagree. If they cannot, it is not a position yet.
 
 1. **Load only what the stage names.** Do not point Claude at the whole workspace.
 2. **One home for each fact.** If it is in `_shared`, point to it. Do not copy it.
-3. **Keep the method and live work separate.** Change `_template`, never a live run.
+3. **Keep the method and live work separate.** Change `_templates/<pipeline>`, never a live run.
 4. **Every session ends with a saved file.** Write the decision down before you leave the room.
 5. **No polished slide deck at the playback.** Use the real work.
 6. **Stage `08` is not optional.** It is the reason this workspace exists.
@@ -272,14 +294,16 @@ them to disagree. If they cannot, it is not a position yet.
 
 | Term | Meaning |
 | --- | --- |
-| **Run** | One problem area going through the stages, in its own numbered folder (e.g. `01-<slug>`) |
+| **Run** | One piece of work going through one pipeline's stages, in its own numbered folder (e.g. `01-<slug>`) |
 | **Stage** | One numbered folder inside a run, with one job |
-| **Workspace root** | The top folder — the one that contains `README.md`, `RUNBOOK.md` and `_template` |
+| **Workspace root** | The top folder — the one that contains `README.md`, `RUNBOOK.md` and `_templates` |
 | **`output/` folder** | Where each stage saves its file. A file here means the stage is done |
 | **`CLAUDE.md`** | The map for a folder. Points to things, holds almost nothing itself |
 | **`CONTEXT.md`** | The instructions for a stage: inputs, process, output, human check |
 | **`_shared`** | Background files every stage uses. Written once |
-| **`_template`** | The blank method. Copy it to start a new run |
+| **Pipeline** | A repeatable process, kept blank in `_templates/<pipeline>/` |
+| **`_templates`** | The blank methods. Copy one to start a new run |
+| **Upstream** | The one output file from another run that a run builds on |
 | **Decision-ready** | Good enough for leadership to make a real decision |
 | **Plan-ready** | Product, Design and Engineering can all say "I can plan against this" |
 | **House view** | The team's opinion of what good looks like for the product. `_shared/house-view.md` |

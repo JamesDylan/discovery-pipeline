@@ -64,7 +64,12 @@ touch a contract.
 | `identity.empty-promise` | `Run-specific notes by stage` exists but is empty, and four contracts point at it |
 | `shared.dangling-reference` | Something points at a `_shared/` file that isn't there |
 | `run.stage-missing` / `run.extra-stage` | Method and instance have drifted apart |
-| `drift.template` | A live run's contract was edited instead of `_template` — the fix dies with the run |
+| `drift.template` | A live run's contract was edited instead of its template — the fix dies with the run |
+| `pipeline.unregistered` | A folder in `_templates/` has no entry under `pipelines` in `checks.json`, or the reverse |
+| `pipeline.running-order` | A template stage has no row with a type (`core`/`live`/`optional`) in its `CONTEXT.md` table, or the optional rows disagree with `checks.json`. `work` reads that table, so a missing row is a stage nobody is offered |
+| `identity.pipeline-unknown` | A run's `Pipeline:` line names a pipeline that does not exist |
+| `identity.upstream-missing` | A run's `Upstream:` path does not resolve. (`identity.upstream-not-run` is the info version: the run exists, its stage has not run yet) |
+| `lineage.stale` | A stage output was built on an input that has since changed — a frame edited after options were written, or a release PRD revised after a feature PRD used it. See below |
 | `engine.edited` | An engine-owned file (per `engine.manifest`) was changed in an instance — the fix never reaches anyone else, and the next pull would overwrite it. Only runs if `engine.manifest` exists |
 | `order.out-of-sequence` | A stage produced output without its declared inputs existing. Legal if deliberate, suspicious otherwise |
 | `contract.upstream-not-run` | Informational: an input isn't there yet because its stage hasn't run |
@@ -109,8 +114,8 @@ Structure tells you the plumbing connects. It cannot tell you whether a contract
 agent *do the work*. This layer runs a stage for real and grades the result.
 
 For each stage under test it builds a throwaway run at `_eval-scratch/` — a fresh copy of
-`_template` with the fixture identity from `fixtures/run/CLAUDE.md` and upstream outputs seeded
-from `fixtures/seed/`. The stage under test starts with an empty `output/`. Then:
+the case's pipeline template with the fixture identity from `fixtures/<pipeline>/run/CLAUDE.md` and
+upstream outputs seeded from `fixtures/<pipeline>/seed/`. The stage under test starts with an empty `output/`. Then:
 
 **Mechanics** — scripted, objective, no grader:
 
@@ -120,7 +125,7 @@ from `fixtures/seed/`. The stage under test starts with an empty `output/`. Then
   deliberately seeds downstream outputs so there is something to illegally peek at.
 - `behaviour.input-not-read` — did it read every input it claims to need?
 
-**Judgement** — graded against `rubrics/<stage>.md`:
+**Judgement** — graded against `rubrics/<pipeline>/<stage>.md`:
 
 - `behaviour.rubric` — one finding per failed criterion, with the grader's evidence quoted and the
   model that judged it named in the detail.
@@ -164,8 +169,10 @@ it's just markdown.
 Under `--grader auto`, if Ollama is unreachable the local criteria are handed to Claude rather than
 dropped, and you get a warning saying so. Nothing goes silently ungraded.
 
-Default stages are the four from the solo test in `RUNBOOK.md`: `01_frame`, `02_explore`,
-`03_converge`, `08_vision-horizon`.
+Default stages come from each pipeline's `behaviour_stages` in `checks.json`. For discovery they are
+the four from the solo test in `RUNBOOK.md`: `01_frame`, `02_explore`, `03_converge`,
+`08_vision-horizon`. The PRD pipelines have none yet: they need a fixture and rubrics first.
+`--stage` filters; a case only runs the stages its own pipeline has.
 
 Requires the `claude` CLI on your PATH. Without it you get `report/manual-run-sheet.md` — the same
 tests, laid out to work through by hand.
@@ -177,12 +184,37 @@ tests, laid out to work through by hand.
 
 ---
 
+## Lineage — stale outputs
+
+Every output is an edit surface, so inputs change after outputs are written. `./eval` keeps a
+ledger (`_eval/lineage.json`) of the hash of each stage output and of every input it was built from:
+the same-run upstream outputs its contract names, plus the run's `Upstream:` file when the
+contract's Inputs mention it. While an output is unchanged, any input whose hash moves makes it
+`lineage.stale`.
+
+- **Clear it** by re-running the stage, editing its output, or — once you have checked it still
+  holds — `./eval --accept <run>/<stage>` (or `--accept <run>` for every stage in it).
+- **Hashes, not timestamps,** because a git checkout resets timestamps. The one exception is the
+  first time `./eval` sees an output: with no history, an input newer than the output is recorded
+  as unknown and stays stale until the output changes or is accepted.
+- **Commit the ledger** in an instance, so the whole team shares one history. The engine never
+  ships one.
+- It cannot see changes made before the first `./eval` after a stage ran, beyond that timestamp
+  check. Run `./eval` after each stage to keep the history tight.
+
+---
+
 ## Changing what it enforces
 
 Almost everything lives in **`checks.json`**, not in code:
 
-- `canonical_outputs` — the one true map of stage → output filename. Rename an output here and the
-  eval will tell you every contract and table that still uses the old name.
+- `pipelines.<name>` — one entry per folder in `_templates/`:
+  - `canonical_outputs` — the one true map of stage → output filename. Rename an output here and
+    the eval will tell you every contract and table that still uses the old name.
+  - `optional_stages` — must match the `optional` rows of the template's running-order table.
+  - `terminal_folders`, `behaviour_stages`.
+- `default_pipeline` — the pipeline of a run whose `CLAUDE.md` has no `Pipeline:` line.
+- `lineage_file` — where the lineage ledger lives (see below).
 - `required_sections` — the sections every stage contract must have.
 - `placeholder_tokens` — the strings that mean "not filled in yet".
 - `severities` — promote or demote any check to `fail` / `warn` / `info`.
@@ -191,7 +223,7 @@ Almost everything lives in **`checks.json`**, not in code:
 - `local` — Ollama settings: `base_url`, `model`, `grader_model`, `num_ctx`, `max_turns`,
   `timeout`, and the `prefer` list the doctor picks from. `./eval doctor` writes `model` for you.
 
-**Rubrics** are plain markdown in `rubrics/`. Drop in `rubrics/05_pressure-test.md` and that stage
+**Rubrics** are plain markdown in `rubrics/<pipeline>/`. Drop in `rubrics/discovery/05_pressure-test.md` and that stage
 becomes gradeable; no code change. Write criteria as numbered, individually falsifiable items with
 an explicit fail condition — the grader is told to be strict, and vague criteria produce vague
 verdicts.
@@ -199,7 +231,7 @@ verdicts.
 ## Workflow for improving the folders over time
 
 1. `./eval` — know you're starting from green (or from a known set of accepted findings).
-2. Change a contract in `_template/`.
+2. Change a contract in `_templates/<pipeline>/`.
 3. `./eval` — catches anything you broke mechanically. Seconds, free.
 4. `./eval legibility --stage <the one you changed>` — did you make it *less executable*? Free, so
    run it as often as you like. This is the loop for iterating on wording.
@@ -222,16 +254,17 @@ _eval/
   evaluate.py        the engine. Stdlib only, no dependencies
   local.py           Ollama client, rubric routing, the legibility agent loop
   checks.json        what is enforced. Edit this, not the code
-  rubrics/           one markdown rubric per gradeable stage, criteria tagged {local} or not
-  fixtures/
-    run/CLAUDE.md    the fixture run identity — a problem space no live run uses
-    seed/<stage>/    pre-made upstream outputs so any stage can be tested in isolation
-  report/            generated: index.html, results.json, history.jsonl
+  rubrics/<pipeline>/          one markdown rubric per gradeable stage, criteria tagged {local} or not
+  fixtures/<pipeline>/
+    run/CLAUDE.md              the fixture run identity — a problem space no live run uses
+    seed/<stage>/              pre-made upstream outputs so any stage can be tested in isolation
+  lineage.json                 instance only: which input versions each output was built from. Commit it
+  report/                      generated: index.html, results.json, history.jsonl
 ```
 
 ## Known limits
 
-- The fixture is one problem space. A contract that works for unused ticket credits and fails for
+- Only discovery has a fixture, and it is one problem space. A contract that works for unused ticket credits and fails for
   something structurally different will pass here. Add a second fixture if that starts to bite.
 - Rubric grading is a model judgement and will vary run to run. Treat a single rubric failure as a
   prompt to read the output yourself, not as a verdict.
