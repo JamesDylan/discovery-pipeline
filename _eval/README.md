@@ -217,6 +217,35 @@ that it matches:
 Feature stages read the digest beside their `Upstream:` file, so lineage hashes the digest, not the
 PRD.
 
+## PRD checks — `./eval prd [run]`
+
+The mechanical half of the Ready bar, checked for free, so a model review spends tokens only on
+judgement. It reads each release PRD (`04_prd/output/prd.md`) and feature PRD
+(`02_spec/output/feature-prd.md`), or one run's, with the same parser as `./digest`.
+
+| Check | What it catches |
+|---|---|
+| `prd.question-pointer` | `see Qn` names a question that does not exist (here, or in the parent for a feature PRD) |
+| `prd.question-orphan` | A question nothing points to. A sub-item's pointer counts for its parent; feature PRDs count for their release |
+| `prd.unresolved-pointer` | `Unresolved` or `Conflicted` with no question ID in the same cell or sentence |
+| `prd.br-ref` | A requirement's Ref is empty or names no heading in the same PRD. A trailing row id (`/ 9`) is allowed |
+| `prd.br-duplicate` | The same requirement ID twice |
+| `prd.vocab` | A requirement prefix or priority, question class or status, screen change or sensitivity outside the house list |
+| `prd.authoring-left` | `AUTHORING RULES`, italic instruction lines, `[placeholder]` brackets, `<…>` template example rows |
+| `prd.scope-overlap` | An item in both Out of scope and Priorities. Exact match only, so it stays `warn` |
+| `prd.inherited-id` | Feature PRD: a requirement ID it names but does not define, missing from the parent's digest |
+| `prd.carried-unmatched` | Release PRD: a row carried to a feature that no feature PRD defines (only once feature runs exist) |
+
+**Severity follows the PRD.** Findings are `warn` while the header Status is Draft and `fail` once
+it says Ready (`prd_checks.ready_status` in `checks.json`), except `ready_exempt`.
+
+**House values** come from the ` ```prd-rules ` block in `_shared/prd-principles.md` — the block
+`./digest` reads — as comma-separated lists: `br.prefixes`, `priority`, `question.class`,
+`question.status`, `screen.change`, `sensitivity`. Values match exactly, case included. A missing
+key skips that check and is reported once as `prd.vocab-missing` (`info`).
+
+`./eval prd` writes the same report as the other layers. It is not part of plain `./eval`.
+
 ---
 
 ## Changing what it enforces
@@ -267,6 +296,7 @@ Every run appends to `report/history.jsonl`, so the trend survives even though `
 _eval/
   README.md          this
   evaluate.py        the engine. Stdlib only, no dependencies
+  prd_checks.py      ./eval prd: free checks on PRD content
   local.py           Ollama client, rubric routing, the legibility agent loop
   checks.json        what is enforced. Edit this, not the code
   rubrics/<pipeline>/          one markdown rubric per gradeable stage, criteria tagged {local} or not

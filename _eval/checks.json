@@ -118,6 +118,17 @@
   },
   "prd_digest_fixture": "_eval/fixtures/prd-digest",
   "_prd_digest_fixture_comment": "A synthetic release PRD and the digest ./digest must make of it (prd.digest-fixture). The digest itself is a process tool: _tools/prd_digest.py.",
+  "prd_checks": {
+    "documents": {
+      "release-prd": "04_prd/output/prd.md",
+      "feature-prd": "02_spec/output/feature-prd.md"
+    },
+    "ready_status": "^ready\\b",
+    "ready_exempt": [
+      "prd.scope-overlap"
+    ]
+  },
+  "_prd_checks_comment": "./eval prd: which file is each pipeline's PRD. Findings are warn while the PRD's header Status is Draft and fail once it matches ready_status, except ready_exempt (heuristics that stay warn). House value lists: the ```prd-rules block in _shared/prd-principles.md.",
   "entrypoints": [
     "CLAUDE.md",
     "CONTEXT.md",
@@ -209,6 +220,18 @@
     "prd.digest-missing": "warn",
     "prd.digest-stale": "warn",
     "prd.digest-fixture": "fail",
+    "prd.question-pointer": "warn",
+    "prd.question-orphan": "warn",
+    "prd.unresolved-pointer": "warn",
+    "prd.br-ref": "warn",
+    "prd.br-duplicate": "warn",
+    "prd.vocab": "warn",
+    "prd.vocab-missing": "info",
+    "prd.authoring-left": "warn",
+    "prd.scope-overlap": "warn",
+    "prd.inherited-id": "warn",
+    "prd.carried-unmatched": "warn",
+    "prd.none": "info",
     "behaviour.output-missing": "fail",
     "behaviour.output-empty": "fail",
     "behaviour.forbidden-read": "fail",

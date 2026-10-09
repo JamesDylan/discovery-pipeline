@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "_tools"))
 import local as local_mod  # noqa: E402
 import manifest as manifest_mod  # noqa: E402
 import prd_digest as prd_digest_mod  # noqa: E402  (process tool; the eval only checks its output)
+import prd_checks as prd_checks_mod  # noqa: E402
 
 EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parent
@@ -844,6 +845,57 @@ def check_prd_digests(r: Results) -> None:
             r.ok("prd.digest-stale")
 
 
+# ───────────────────────────────────────────────────────────── PRD checks
+
+def run_prd(r: Results, only: Path | None = None) -> None:
+    """
+    `./eval prd [run]`: the mechanical half of the Ready bar, on each release and feature PRD.
+    Pointers land, IDs are unique and exist, values come from the house lists, no template text
+    survives. `warn` while the PRD's Status is Draft, `fail` once it says Ready. Checks are in
+    `prd_checks.py`; which file each pipeline's PRD is, in checks.json `prd_checks`.
+    """
+    cfg = prd_digest_mod.config()
+    pc = r.spec.get("prd_checks", {})
+    docs = pc.get("documents", {})
+    allowed = prd_checks_mod.house(cfg)
+    missing = [k for k in prd_checks_mod.VOCAB if k not in allowed]
+    if missing:
+        r.add("prd.vocab-missing", "no house value list for " + ", ".join(missing)
+              + " — those vocabulary checks were skipped", layer="prd", file=cfg["rules_file"],
+              detail="Add the keys to the ```prd-rules block, as comma-separated lists.")
+    ready_rx = re.compile(pc.get("ready_status", r"^ready\b"), re.I)
+    exempt = set(pc.get("ready_exempt", []))
+
+    prds = {run: run / docs[pipeline_of(run, r.spec)] for run in runs()
+            if pipeline_of(run, r.spec) in docs}
+    prds = {run: path for run, path in prds.items() if path.is_file()}
+    checked = 0
+    for run, path in prds.items():
+        if only is not None and run != only:
+            continue
+        upstream = ROOT / upstream_of(run) if upstream_of(run) else None
+        parent = read(upstream) if upstream and upstream.is_file() else ""
+        children = [read(p) for c, p in prds.items()
+                    if upstream_of(c) and (ROOT / upstream_of(c)).resolve() == path.resolve()]
+        status, issues = prd_checks_mod.check(
+            read(path), cfg, allowed,
+            parent_digest=prd_digest_mod.build(parent, cfg) if parent else None,
+            parent_name=upstream_of(run), children=children)
+        ready = bool(ready_rx.search(status))
+        for i in issues:
+            sev = r.spec["severities"].get(i.check, "warn")
+            if ready and sev == "warn" and i.check not in exempt:
+                sev = "fail"
+            r.add(i.check, i.message, layer="prd", scope=run.name, file=rel(path), line=i.line,
+                  detail=i.detail, severity=sev)
+        if not issues:
+            r.ok("prd.checks")
+        checked += 1
+    if not checked:
+        r.add("prd.none", "no PRD to check" + (f" in {only.name}" if only else ""), layer="prd",
+              severity="info")
+
+
 # ───────────────────────────────────────────────────────────── behavioural layer
 
 def claude_cli() -> str | None:
@@ -1380,7 +1432,7 @@ def load_history() -> list[dict]:
 def write_report(r: Results, layers: list[str], duration: float) -> tuple[Path, dict | None]:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     history = load_history()
-    previous = history[-1] if history else None
+    previous = next((h for h in reversed(history) if h.get("layers") == layers), None)
 
     payload = {
         "generated": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
@@ -1638,9 +1690,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         prog="eval", description="Evaluate the pipeline workspace.")
     ap.add_argument("layer", nargs="?", default="structure",
-                    choices=["structure", "legibility", "behaviour", "all", "doctor"],
+                    choices=["structure", "legibility", "behaviour", "all", "doctor", "prd"],
                     help="structure (free) · legibility (local model, free) · "
-                         "behaviour (costs tokens) · all · doctor (check the local model)")
+                         "behaviour (costs tokens) · all · doctor (check the local model) · "
+                         "prd (free checks on PRD content)")
+    ap.add_argument("run", nargs="?",
+                    help="prd: one run, or a unique part of its name. Default: every PRD run.")
     ap.add_argument("--stage", action="append", default=[],
                     help="stage to test, repeatable. Default: each case's pipeline's "
                          "behaviour_stages in checks.json.")
@@ -1675,6 +1730,16 @@ def main() -> int:
     layers: list[str] = []
     stages = args.stage  # empty: each case's pipeline decides
     t0 = time.time()
+
+    if args.layer == "prd":
+        only = None
+        if args.run:
+            only = prd_digest_mod.find_run(args.run)
+            if only is None:
+                print(f"no run matches '{args.run}'", file=sys.stderr)
+                return 2
+        layers.append("prd")
+        run_prd(r, only)
 
     if args.layer in ("structure", "all"):
         layers.append("structure")

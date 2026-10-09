@@ -25,6 +25,7 @@ Running it when the digest is current changes nothing, so a stage can always run
 defaults live in `prd_digest.py`. A house overrides them in a ` ```prd-rules ` block in
 `_shared/prd-principles.md`, as lines of `id.<kind>: regex` (kinds: `requirement`, `question`,
 `metric`, `feature`) or `section.<name>: regex`.
+`./eval prd` reads the same block for the house value lists (see `_eval/README.md`).
 
 **How the eval checks it.** The digest's first line holds a hash of the PRD it was built from.
 `./eval` reports `prd.digest-missing` and `prd.digest-stale` when the digest does not match, and

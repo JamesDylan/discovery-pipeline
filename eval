@@ -7,6 +7,7 @@
 #   ./eval doctor                   one-time: find and test the local Ollama model
 #   ./eval legibility               local model executes each stage — is the contract unambiguous?
 #   ./eval legibility --stage 02_explore --keep
+#   ./eval prd [run]                PRD content: pointers, IDs, house values, template leftovers
 #
 # Costs tokens — run at a checkpoint, not while editing:
 #   ./eval behaviour                Claude runs the stages and grades the output
