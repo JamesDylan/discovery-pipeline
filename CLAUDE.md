@@ -38,12 +38,17 @@ read the running order from the template, not the run's copy — the template is
    terminal folder uses (e.g. `99`–`101`). Pad to 2 digits. Copy `_templates/<pipeline>` to `NN-<slug>`.
 3. Fill the identity block in `NN-<slug>/CLAUDE.md` with the user, one question at a time
    (per `_shared/operating-principles.md`). Don't invent answers. "Skip" leaves the placeholder.
-   Ask for `Upstream:` — a path to another run's output this run builds on, or `none`. Check the
-   path exists.
+   Ask for `Upstream:` first — a path to another run's output this run builds on, or `none`. Check
+   the path exists.
+   **Pre-filled intake.** If `Upstream:` is the PRD a release run's `04_prd` wrote, and
+   `feature-intakes/<slug>.md` sits beside it, copy that file to `NN-<slug>/00_intake/output/intake.md`
+   and fill the run's title, `Feature:` and `Release:` from it. Ask only for what is left. If no intake matches
+   `<slug>` but the folder holds others, list them and ask which, or none.
 4. If the identity has a `Run-specific notes by stage` section, ask whether they have notes. If not,
    delete the whole section.
 5. Stop. Report the folder name and say: start a new session and type `work NN-<slug>`.
-   Do not start a stage in this session.
+   Do not start a stage in this session. If the intake was pre-filled, quote the `00_intake`
+   **Human check** and say `work` will propose the next stage.
 
 **`status [run]`** — report where things stand. Read only.
 1. Run the Status command below (or its run-scoped equivalent).

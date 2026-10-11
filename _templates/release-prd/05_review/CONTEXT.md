@@ -19,7 +19,8 @@ prepares it and writes it up; it never simulates the meeting.
 3. **After:** write up each decision, each change, and each open question with an owner and a date.
 4. A change to the slice goes back into `scope.md` or `prd.md`. It does not live only here.
 5. A revision edits only the section that changed. Never rewrite the whole file.
-6. If you changed `prd.md`, run `./digest <run>` from the workspace root.
+6. If you changed `prd.md`, run `./digest <run>` from the workspace root, and edit each
+   `../04_prd/output/feature-intakes/<slug>.md` that cites an ID you changed.
 7. After changing the PRD, run `./eval prd <run>` again. The review is done when it shows
    no finding the review did not accept on purpose.
 

@@ -81,7 +81,8 @@
         ],
         "04_prd": [
           "prd.md",
-          "prd-digest.md"
+          "prd-digest.md",
+          "feature-intakes/<slug>.md"
         ],
         "05_review": [
           "review.md"

@@ -23,7 +23,9 @@ output, it never simulates the meeting.
 
 The release PRD stays short by pointing at features, not specifying them. `03_scope` lists the
 candidate features, one line and one slug each. Anyone can then start `new feature-prd <slug>` at any
-time, with `Upstream:` set to this run's `04_prd/output/prd.md`. Nothing in this run waits for them.
+time, with `Upstream:` set to this run's `04_prd/output/prd.md`. `04_prd` writes each one a
+pre-filled intake in `feature-intakes/<slug>.md`, so the feature run starts at `01_behaviour`.
+Nothing in this run waits for them.
 If `prd.md` changes later, `./eval` flags every feature PRD built on the old version.
 
 ## Status

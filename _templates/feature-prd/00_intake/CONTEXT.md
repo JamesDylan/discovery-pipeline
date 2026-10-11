@@ -16,13 +16,18 @@ yet.
 - **Do NOT load:** any other stage folder of this run.
 
 ## Process
+0. If `output/intake.md` already exists, it was pre-filled from the release run's
+   `feature-intakes/`. Do not redo steps 1–3. Run only the Human check, and edit the intake if it
+   fails.
 1. State the feature in one sentence: who can do what, that they cannot do today.
 2. From the upstream digest, list the decisions that bind this feature, by ID (rule, requirement,
    question) or section. Do not copy them.
 3. List any other sources and constraints. Ask; do not assume. One question at a time.
 
 ## Outputs
-- `intake.md` → `output/` — feature statement, binding upstream decisions by reference, sources, constraints
+- `intake.md` → `output/` — a feature-name title, then headings: Feature, Release, Binding upstream decisions (by reference),
+  Screens it owns, Open questions, Sources and constraints. The release run's `04_prd` writes the
+  same shape
 
 ## Human check
 Read the feature sentence to the release owner. If they describe a different feature, stop here.
