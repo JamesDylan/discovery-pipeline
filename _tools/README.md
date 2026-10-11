@@ -17,7 +17,7 @@ open questions (closed ones as IDs only), screens, features and metrics.
 |---|---|
 | `release-prd/04_prd` | Last step, after writing or revising `prd.md` |
 | `release-prd/05_review` | After a review change is written back into `prd.md` |
-| `feature-prd/00_intake`, `01_behaviour`, `02_spec` | Before reading the digest, with the `Upstream:` path. Covers a hand edit to `prd.md` |
+| `feature-prd/00_intake`, `01_behaviour`, `02_prd` | Before reading the digest, with the `Upstream:` path. Covers a hand edit to `prd.md` |
 
 Running it when the digest is current changes nothing, so a stage can always run it.
 

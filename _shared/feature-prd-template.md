@@ -1,6 +1,6 @@
 # Feature PRD template
 
-The shape `feature-prd/02_spec` writes to. Written for an agentic delivery process: every section
+The shape `feature-prd/02_prd` writes to. Written for an agentic delivery process: every section
 is something a builder acts on.
 
 > **STATUS: STARTER.** A generic shape. Replace it with your organisation's format, and match it to

@@ -20,7 +20,7 @@ discovery run.
 | `prototype-target.md` | Which prototyping tool the handoffs brief, and its conventions. Blank = brief a human designer | `discovery/10_prototype-handoff`, `101-prototype-handoff` |
 | `prd-principles.md` | Tests a PRD must pass, and failure modes | `release-prd/02_problem`, `release-prd/03_scope`, `feature-prd/01_behaviour` |
 | `prd-template.md` | The release PRD's section shape | `release-prd/04_prd` |
-| `feature-prd-template.md` | The feature PRD's section shape | `feature-prd/02_spec` |
+| `feature-prd-template.md` | The feature PRD's section shape | `feature-prd/02_prd` |
 | `delivery-target.md` | Which delivery tool feature PRDs convert for, and its conventions. Blank = the handoff stops | `feature-prd/04_delivery-handoff` |
 
 `accelerator-brief.md`, `timeline.md`, `product-context.md`, `house-view.md`, `prototype-target.md` and

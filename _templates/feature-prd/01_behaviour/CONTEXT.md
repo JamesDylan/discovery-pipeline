@@ -14,7 +14,7 @@ write the PRD yet.
   digest if the PRD changed. If it says there is no release PRD there, load the upstream file
   instead. Open a full upstream section only when the digest line is not enough, and name the
   section you opened.
-- **Do NOT load:** `../02_spec/` onward.
+- **Do NOT load:** `../02_prd/` onward.
 
 ## Process
 1. Name the users and the job each one is doing.

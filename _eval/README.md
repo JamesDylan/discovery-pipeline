@@ -221,7 +221,7 @@ PRD.
 
 The mechanical half of the Ready bar, checked for free, so a model review spends tokens only on
 judgement. It reads each release PRD (`04_prd/output/prd.md`) and feature PRD
-(`02_spec/output/feature-prd.md`), or one run's, with the same parser as `./digest`.
+(`02_prd/output/feature-prd.md`), or one run's, with the same parser as `./digest`.
 
 | Check | What it catches |
 |---|---|

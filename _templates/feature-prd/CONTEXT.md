@@ -10,7 +10,7 @@ and human checks are set; the processes are first drafts.
 |---|---|---|---|
 | `00_intake` | core | State the feature and what its upstream already decided | `intake.md` |
 | `01_behaviour` | core | Decide what the user sees, in every state | `behaviour.md` |
-| `02_spec` | core | Write the feature PRD with testable acceptance criteria | `feature-prd.md` |
+| `02_prd` | core | Write the feature PRD with testable acceptance criteria | `feature-prd.md` |
 | `03_review` | live | Engineering refinement | `review.md` |
 | `04_delivery-handoff` | optional | Convert to the delivery tool's format | `handoff.md` |
 

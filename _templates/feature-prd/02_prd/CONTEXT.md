@@ -1,4 +1,4 @@
-# 02_spec — write the feature PRD
+# 02_prd — write the feature PRD
 
 One job: write the feature PRD from the decided behaviour. Assert nothing `01_behaviour` did not
 decide.

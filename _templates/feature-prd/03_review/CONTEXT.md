@@ -6,7 +6,7 @@ agent prepares it and writes it up; it never simulates the meeting.
 ## Inputs
 - Reference (every run): `../../_shared/operating-principles.md`
 - Reference (every run): `../../_shared/house-view.md`
-- Working (this run): `../02_spec/output/feature-prd.md`
+- Working (this run): `../02_prd/output/feature-prd.md`
 - Working (this run): `../CLAUDE.md` — run identity
 - **Do NOT load:** `../00_intake/`, `../04_delivery-handoff/`.
 

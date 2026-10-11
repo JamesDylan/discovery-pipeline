@@ -7,7 +7,7 @@ handoff is wrong, the feature PRD is wrong — fix it there.
 - Reference (every run): `../../_shared/operating-principles.md`
 - Reference (every run): `../../_shared/house-view.md`
 - Reference: `../../_shared/delivery-target.md` — which delivery tool, where its files go, its conventions
-- Working (this run): `../02_spec/output/feature-prd.md`
+- Working (this run): `../02_prd/output/feature-prd.md`
 - Working (this run): `../03_review/output/review.md`
 - Working (this run): `../CLAUDE.md` — run identity
 - **Do NOT load:** `../00_intake/`, `../01_behaviour/`.

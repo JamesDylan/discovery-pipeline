@@ -100,7 +100,7 @@
         "01_behaviour": [
           "behaviour.md"
         ],
-        "02_spec": [
+        "02_prd": [
           "feature-prd.md"
         ],
         "03_review": [
@@ -122,7 +122,7 @@
   "prd_checks": {
     "documents": {
       "release-prd": "04_prd/output/prd.md",
-      "feature-prd": "02_spec/output/feature-prd.md"
+      "feature-prd": "02_prd/output/feature-prd.md"
     },
     "ready_status": "^ready\\b",
     "ready_exempt": [
