@@ -23,7 +23,8 @@ not decide.
    and makes the digest the feature runs read.
 6. Write one feature intake per candidate feature in `scope.md`, to
    `output/feature-intakes/<slug>.md`, using the slug `scope.md` gives. About 200 words: a
-   `# <feature name>` title, then these headings in this order:
+   `# <feature ID> <feature name>` title, with the ID the digest's Features section gives it
+   (e.g. `# F2 Create a Group`), then these headings in this order:
    - **Feature:** one sentence — who can do what, that they cannot do today.
    - **Release:** this release's name and PRD ID.
    - **Binding upstream decisions:** rule, requirement and question IDs from `prd-digest.md`, or

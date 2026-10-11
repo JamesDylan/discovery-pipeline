@@ -25,7 +25,8 @@ yet.
 3. List any other sources and constraints. Ask; do not assume. One question at a time.
 
 ## Outputs
-- `intake.md` → `output/` — a feature-name title, then headings: Feature, Release, Binding upstream decisions (by reference),
+- `intake.md` → `output/` — a title of the feature's ID in the upstream digest (if it has one) and
+  its name, then headings: Feature, Release, Binding upstream decisions (by reference),
   Screens it owns, Open questions, Sources and constraints. The release run's `04_prd` writes the
   same shape
 
