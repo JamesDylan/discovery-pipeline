@@ -1,15 +1,10 @@
 # Pipeline Workspace — How This Works
 
-A workspace for repeatable product processes. Each process is a **pipeline**: `discovery` (a problem
-space to a 12-month vision), `release-prd` and `feature-prd`. Each folder is one step of the work. Each step folder holds its own instructions (`CONTEXT.md`) and
-an `output/` folder. Open the workspace in Claude, name the step, and Claude does that step only —
-using only the files that step lists.
+A workspace for repeatable product processes. Each process is a **pipeline**: `discovery` (a problem space to a 12-month vision), `release-prd` and `feature-prd`. Each folder is one step of the work. Each step folder holds its own instructions (`CONTEXT.md`) and an `output/` folder. Open the workspace in Claude, name the step, and Claude does that step only — using only the files that step lists.
 
 No tool to learn. No special software. Folders hold the order, files hold the state.
 
-**Part A** gets you running in five minutes. **Part B** explains the discovery pipeline: what it is
-for and why it works. `RUNBOOK.md` is the facilitator's guide for discovery. `AUTHORING.md` is the
-rulebook for designing a new pipeline.
+**Part A** gets you running in five minutes. **Part B** explains the discovery pipeline: what it is for and why it works. `RUNBOOK.md` is the facilitator's guide for discovery. `AUTHORING.md` is the rulebook for designing a new pipeline.
 
 ---
 ---
@@ -18,20 +13,15 @@ rulebook for designing a new pipeline.
 
 ## Quick start (5 minutes)
 
-1. **Open the workspace root** (the folder this README is in) in Claude Code — desktop app, IDE,
-   or `claude` in a terminal. Always the root, never a subfolder.
-2. **Type:** `new discovery expense-capture` (or `new release-prd …`, `new feature-prd …`)
-   Claude copies `_templates/discovery` to the next free number (e.g. `05-expense-capture`) and asks
-   you the run's identity questions, one at a time.
+1. **Open the workspace root** (the folder this README is in) in Claude Code — desktop app, IDE, or `claude` in a terminal. Always the root, never a subfolder.
+2. **Type:** `new discovery expense-capture` (or `new release-prd …`, `new feature-prd …`) Claude copies `_templates/discovery` to the next free number (e.g. `05-expense-capture`) and asks you the run's identity questions, one at a time.
 3. **Start a new conversation and type:** `work expense-capture`
    Claude checks what's done, proposes the next stage, runs it, and stops at the human check.
 4. Repeat step 3 — one stage per conversation. (`/clear` starts a fresh one.)
 
-Prefer doing it by hand? Copy `_templates/<pipeline>`, rename it `NN-your-problem`, fill its
-`CLAUDE.md`, then go to step 3.
+Prefer doing it by hand? Copy `_templates/<pipeline>`, rename it `NN-your-problem`, fill its `CLAUDE.md`, then go to step 3.
 
-> **Why the number?** The eval and the status check find runs by their number prefix. It is only an
-> ID. Runs of every pipeline share one number sequence.
+> **Why the number?** The eval and the status check find runs by their number prefix. It is only an ID. Runs of every pipeline share one number sequence.
 
 ## Pipelines and how runs connect
 
@@ -41,15 +31,10 @@ Prefer doing it by hand? Copy `_templates/<pipeline>`, rename it `NN-your-proble
 | `release-prd` | The PRD for a key release. Short: it names its features, it does not specify them |
 | `feature-prd` | One feature, specified for agentic delivery. Anyone can start one at any time |
 
-A run can build on one other run's output: its `Upstream:` line. A feature PRD usually points at a
-release PRD's `04_prd/output/prd.md`, but reads `prd-digest.md` beside it: one line per ID instead
-of the whole PRD. The agent keeps the digest current with `./digest`, as the stage contracts say;
-you never run it yourself. When the digest changes, `./eval` flags every feature PRD built on the
-old version (`lineage.stale`). Re-run the stage, or check it and type
-`./eval --accept <run>/<stage>`.
+A run can build on one other run's output: its `Upstream:` line. A feature PRD usually points at a release PRD's `04_prd/output/prd.md`, but reads `prd-digest.md` beside it: one line per ID instead
+of the whole PRD. The agent keeps the digest current with `./digest`, as the stage contracts say; you never run it yourself. When the digest changes, `./eval` flags every feature PRD built on the old version (`lineage.stale`). Re-run the stage, or check it and type `./eval --accept <run>/<stage>`.
 
-`release-prd` and `feature-prd` are skeletons: the stages and checks are set, the processes are first
-drafts.
+`release-prd` and `feature-prd` are skeletons: the stages and checks are set, the processes are first drafts.
 
 ## Commands
 

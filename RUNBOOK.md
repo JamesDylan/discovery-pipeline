@@ -2,11 +2,9 @@
 
 This runbook covers the `discovery` pipeline. The PRD pipelines run from their own `CONTEXT.md`.
 
-The facilitator's guide. `README.md` covers how to open the workspace and type commands. This file
-covers how to run the process with people: the order, who is involved, and what goes wrong.
+The facilitator's guide. `README.md` covers how to open the workspace and type commands. This file covers how to run the process with people: the order, who is involved, and what goes wrong.
 
-> **This is a guide, not a fixed schedule.** You can change the order, skip ahead, or go back. One
-> rule is fixed: **every stage saves a file**, so the next stage has something to work from.
+> **This is a guide, not a fixed schedule.** You can change the order, skip ahead, or go back. One rule is fixed: **every stage saves a file**, so the next stage has something to work from.
 
 - **Part 1 — The path through a run.** The usual order, start to finish.
 - **Part 2 — Stage-by-stage reference.** What each stage is for, who is involved, what goes wrong.
@@ -28,20 +26,16 @@ covers how to run the process with people: the order, who is involved, and what 
 | 9 | Vision horizon | `work <run>/08_vision-horizon` — can run alongside `07` | `vision-horizon.md` |
 | 10 | Report / handoff *(optional)* | `work <run>/09_report`, `work <run>/10_prototype-handoff` | `vision-report.html`, `prototype-briefs/*.md` |
 
-**After every stage:** open the output file, do the **Human check** from that stage's `CONTEXT.md`,
-and edit the file if you disagree. The next stage reads whatever you leave. Then start a fresh
-conversation (`/clear`) before the next stage.
+**After every stage:** open the output file, do the **Human check** from that stage's `CONTEXT.md`, and edit the file if you disagree. The next stage reads whatever you leave. Then start a fresh conversation (`/clear`) before the next stage.
 
-**Where is a run up to?** Type `status <run>`, or look in each stage's `output/` folder in Finder.
-A file there means done.
+**Where is a run up to?** Type `status <run>`, or look in each stage's `output/` folder in Finder. A file there means done.
 
 ---
 ---
 
 # Part 2 — Stage-by-stage reference
 
-Detail on every stage: who is involved, what it is really for, and what usually goes wrong.
-Part 1 tells you what to do. This part tells you what to watch for while you do it.
+Detail on every stage: who is involved, what it is really for, and what usually goes wrong. Part 1 tells you what to do. This part tells you what to watch for while you do it.
 
 ## Roles at a glance
 
@@ -56,10 +50,8 @@ Part 1 tells you what to do. This part tells you what to watch for while you do 
 
 ## Two rules to follow every time
 
-1. **Start Claude Code at the workspace root**, never inside a run or stage folder. The root
-   `CLAUDE.md` only loads from there, and the stage files' relative paths only resolve from there.
-2. **Use a fresh conversation for each stage.** Type `/clear` between stages. In one long chat,
-   earlier stages leak into later ones and Claude's questions get weaker.
+1. **Start Claude Code at the workspace root**, never inside a run or stage folder. The root `CLAUDE.md` only loads from there, and the stage files' relative paths only resolve from there.
+2. **Use a fresh conversation for each stage.** Type `/clear` between stages. In one long chat, earlier stages leak into later ones and Claude's questions get weaker.
 
 ## Day 0 — Setup (stage 00)
 
@@ -69,25 +61,20 @@ Part 1 tells you what to do. This part tells you what to watch for while you do 
 
 1. If not done yet for this workspace: answer `_shared/setup-questionnaire.md` and write the answers
    into `_shared/product-context.md`.
-2. List what exists: research (mark anything older than one year), Productboard, analytics, earlier
-   designs, design-system assets, and experts.
-3. Check you can **open** each item. You are testing access, not reading the content. The common
-   failure is finding on day one that you cannot open something you need.
+2. List what exists: research (mark anything older than one year), Productboard, analytics, earlier designs, design-system assets, and experts.
+3. Check you can **open** each item. You are testing access, not reading the content. The common failure is finding on day one that you cannot open something you need.
 4. Sort the gaps into three groups: **blocking**, **degrading** (makes the work worse), or **ignore**.
 5. Book time with the experts you will need in `01` and `05`.
 
 **Output:** `00_setup/output/inventory.md`
 
-**Done when:** you can open everything on the list, and reading your own context file teaches you
-something new.
+**Done when:** you can open everything on the list, and reading your own context file teaches you something new.
 
-> **Watch out.** People start doing the real work during setup. If a pair starts framing the problem
-> on day 0, stop them. Keeping setup separate is the whole value of this stage.
+> **Watch out.** People start doing the real work during setup. If a pair starts framing the problem on day 0, stop them. Keeping setup separate is the whole value of this stage.
 
 ## Kickoff — a live meeting, not a folder
 
-**Who:** leadership and the pair. This cannot be done by Claude, and it must happen before
-`01_frame` starts.
+**Who:** leadership and the pair. This cannot be done by Claude, and it must happen before `01_frame` starts.
 
 **Agenda:**
 
