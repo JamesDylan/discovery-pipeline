@@ -124,6 +124,7 @@ These must always be true.
 | BR-JRN-01 | *(carried to F1 — release split)* | | | |
 | BR-JRN-02 | *(split and carried to F1 and F2 — release split)* | | | |
 | BR-JRN-03 | *(new in F2 — release split)* | | | |
+| BR-JRN-04 | *(new in F0 — retired at F0 refinement: folded into BR-JRN-03)* | | | |
 
 ## Risks and Concerns
 

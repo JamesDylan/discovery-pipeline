@@ -1,4 +1,4 @@
-<!-- prd-digest of prd.md sha:fc4a1e47419d — written by ./digest. Do not edit; edit the PRD and run it again. -->
+<!-- prd-digest of prd.md sha:9db65c041e00 — written by ./digest. Do not edit; edit the PRD and run it again. -->
 
 > Digest of `prd.md`: one line per item. Open a full section of the PRD only when a line here is not enough, and name the section you opened.
 
@@ -31,6 +31,7 @@ PRD Id: PRD-LIB-002. Version: 0.3. Status: Draft. Date: 2026-01-15.
 - BR-JRN-01 → carried to F1
 - BR-JRN-02 → split and carried to F1 and F2
 - BR-JRN-03 → new in F2
+- BR-JRN-04 → new in F0 — retired at F0 refinement: folded into BR-JRN-03
 
 ## Open questions
 - Q1 open, B. Example: Where is the catalogue API contract published?

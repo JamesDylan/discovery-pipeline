@@ -276,8 +276,9 @@ def part_requirements(lines: list[str], cfg: dict) -> list[str]:
                 last_group = group
             text = cell_at(row, req)
             if text.startswith("(") and text.endswith(")"):
-                # a placeholder row: the requirement lives elsewhere, e.g. "(carried to F2 — why)"
-                out.append(f"- {rid} → {text[1:-1].split(' — ')[0]}")
+                # a placeholder row: the requirement lives elsewhere, e.g. "(carried to F2 — release split)".
+                # Keep the status ("retired at F0 refinement", "F3 part added") and drop only the routine tag.
+                out.append(f"- {rid} → {text[1:-1].replace(' — release split', '')}")
             else:
                 priority = cell_at(row, pri)
                 out.append(f"- {rid}{' ' + priority if priority else ''}: {text}")
